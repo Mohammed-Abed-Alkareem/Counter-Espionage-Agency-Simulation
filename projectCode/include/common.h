@@ -17,7 +17,6 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
-#include "utils.h"
 #include <semaphore.h>
 #include <fcntl.h>
 #include <math.h>
