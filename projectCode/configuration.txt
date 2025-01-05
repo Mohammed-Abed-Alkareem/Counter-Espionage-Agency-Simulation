@@ -66,7 +66,10 @@ INJURY_PROBABILITY=0.3
 CAPTURE_PROBABILITY=0.2             
 
 #recovery time (seconds) for light injuries
-LIGHT_INJURY_RECOVERY_TIME=10         
+LIGHT_INJURY_RECOVERY_TIME=10  
+
+#recover rate #this is better
+RECOVER_RATE=0.2
 
 #probability that an injury is sevee
 SEVERE_INJURY_PROBABILITY=0.3    
