@@ -33,4 +33,64 @@ typedef struct {
 
 } SharedData;
 
+
+// message structures 
+
+typedef struct  {
+    int type;
+    int group_id;
+    int member_num;
+    int people_process_num;
+    int people_number; // like ID
+    int num_of_sec_communcated_with;
+} PeopleContactReportMessage; // report message from people to resistance group for agency to know
+
+typedef struct  {
+    int type; // The group ID
+    int member_num;
+    int state; // e.g., killed, severely injured, lightly injured
+} ResistanceMemberStateReportMessage; // report message from resistance group of his state to agency;
+
+
+typedef struct  {
+    int type; // The people number
+    int state; // e.g., arrested, killed, caught, released
+} AgencyToPeopleStateMessage; // from agency to people to know their state
+
+typedef struct  {
+    int type; // The group number
+    int member_number;
+    int state; // e.g., arrested, killed, caught, released
+    int time_sent;
+} AgencyToResistanceStateMessage ;
+
+typedef struct  {
+    int type;
+    int process_id; // For general attack on all groups
+    int group_id; // Specific attack on a member
+    int group_type; // e.g., military, civilian
+    int group_member; // Specific attack on a member
+}SpyToEnemyReportMessage; // report message from spy to enemy
+
+
+typedef struct  {
+    int type; // Group number
+    int member_id; // For specific attack
+    int attack_type; // e.g., target, kill, definite kill
+    int isGeneral; // For general attack
+    int time_sent;
+} EnemyToResistanceGroupAttackMessage ;
+
+
+typedef struct  {
+    int type; // Represents the people ID
+    int num_of_sec; // Number of seconds communicated
+    int group_id; // Group ID
+    int group_type ; // e.g., military, civilian
+    int member_id; // Member ID
+}ResistanceMemberToPeopleContactMessage ; // resistance group member contac with people message structure 
+
+
+
+
 #endif // COMMON_H

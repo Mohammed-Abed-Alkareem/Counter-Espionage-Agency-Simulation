@@ -108,7 +108,6 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < config.CIVILIAN_NUMBER; i++) {
         if ((civilian_pid[i] = fork()) == 0) {
             execl("./bin/civilian", "civilian", argv[1], NULL);
-            // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/civilian", "civilian", argv[1], NULL);
             perror("Civilian process failed");
             exit(1);
         }
@@ -154,22 +153,15 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-key_t key_generator(char letter){
 
-    key_t key = ftok(".", letter) ;
-    if(key == -1){
-        perror("Key generation failed");
-        exit(1);
-    }
 
-    return key ;
-}
 
 void handle_alarm(int signal) {
     if (signal == SIGALRM) {
     alarm_triggered = 1;
     }
 }
+
 void cleanup() {
     if (shm_data_id != -1) shmctl(shm_data_id, IPC_RMID, NULL);
     if (msg_resistance_agency_id != -1) msgctl(msg_resistance_agency_id, IPC_RMID, NULL);
