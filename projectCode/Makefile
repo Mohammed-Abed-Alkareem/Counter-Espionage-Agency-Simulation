@@ -5,16 +5,16 @@ LDFLAGS = -pthread -lrt
 
 # Directories
 SRC_DIR = source
-LIB_DIR = $(SRC_DIR)/libs
+UTILS_DIR = $(SRC_DIR)/utils
 HDR_DIR = header
 BIN_DIR = bin
 
 # Source files
-LIB_SRCS = $(wildcard $(LIB_DIR)/*.c)  # Library source files
-EXEC_SRCS = $(filter-out $(LIB_SRCS), $(wildcard $(SRC_DIR)/*.c))  # Executable source files
+UTILS_SRCS = $(wildcard $(UTILS_DIR)/*.c)  # UTILSrary source files
+EXEC_SRCS = $(filter-out $(UTILS_SRCS), $(wildcard $(SRC_DIR)/*.c))  # Executable source files
 
 # Object files
-LIB_OBJS = $(LIB_SRCS:$(LIB_DIR)/%.c=$(BIN_DIR)/%.o)
+UTILS_OBJS = $(UTILS_SRCS:$(UTILS_DIR)/%.c=$(BIN_DIR)/%.o)
 EXEC_OBJS = $(EXEC_SRCS:$(SRC_DIR)/%.c=$(BIN_DIR)/%.o)
 
 # Executables
@@ -23,13 +23,13 @@ EXECS = $(EXEC_SRCS:$(SRC_DIR)/%.c=$(BIN_DIR)/%)
 # Default rule
 all: $(EXECS)
 
-# Build each executable, linking with library objects
-$(BIN_DIR)/%: $(SRC_DIR)/%.c $(LIB_OBJS)
+# Build each executable, linking with UTILSrary objects
+$(BIN_DIR)/%: $(SRC_DIR)/%.c $(UTILS_OBJS)
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) $< $(LIB_OBJS) -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $< $(UTILS_OBJS) -o $@ $(LDFLAGS)
 
-# Compile library source files into object files
-$(BIN_DIR)/%.o: $(LIB_DIR)/%.c $(HDR_DIR)/%.h
+# Compile UTILSrary source files into object files
+$(BIN_DIR)/%.o: $(UTILS_DIR)/%.c $(HDR_DIR)/%.h
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 

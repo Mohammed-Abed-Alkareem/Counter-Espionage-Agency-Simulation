@@ -1,54 +1,97 @@
-#simulation time in seconds
-SIMULATION_DURATION=300
 
-#number of agency members               
-COUNTER_ESPIONAGE_AGENCY_MEMBER=5     
+#________________________________
+#----Simulation parameters-----
+#________________________________
 
-#time interval (seconds) for creating new resistance groups
-RESISTANCE_GROUP_CREATION_INTERVAL=1 
+    #simulation time in seconds
+    SIMULATION_DURATION=300
 
-#maximum number of resistance groups
-RESISTANCE_GROUP_MAX=5               
+    #number of agency members               
+    COUNTER_ESPIONAGE_AGENCY_MEMBER=5     
 
-#minimum members in a resistance group 
-RESISTANCE_MEMBER_MIN=3               
+    #time interval (seconds) for creating new resistance groups
+    RESISTANCE_GROUP_CREATION_INTERVAL=1 
 
-#maximum members in a resistance group
-RESISTANCE_MEMBER_MAX=10              
-
-#probability that a resistance group is military
-MILITARY_GROUP_PROBABILITY=0.5      
-
-#probability of a spy infiltrating a resistance group
-SPY_PROBABILITY=0.2     
-            
-SUSPICION_THRESHOLD=0.7             #suspicion threshold for arresting potential spies
-
-SPY_CONFIRMATION_THRESHOLD=0.8      #threshold for confirming spying activities during interrogation
-
-FULL_GROUP_KILLED_PROBABILITY=0.2   #probability that the entire group is killed
-
-MIXED_OUTCOME_PROBABILITY=0.8       #probability of a mixed outcome (some killed, injured, or captured)
-
-KILL_PROBABILITY=0.5                #probability a member is killed in a partial outcome
-
-INJURY_PROBABILITY=0.3              #probability a member is injured in a partial outcome
-
-CAPTURE_PROBABILITY=0.2             #probability a member is captured in a partial outcome
+    #maximum number of resistance groups
+    RESISTANCE_GROUP_MAX=5         
 
 
-LIGHT_INJURY_RECOVERY_TIME=10         #recovery time (seconds) for light injuries
+#________________________________
+#----Resistance group parameters-----
+#________________________________      
 
-SEVERE_INJURY_PROBABILITY=0.3         #probability that an injury is sevee
+    #minimum members in a resistance group 
+    RESISTANCE_MEMBER_MIN=3               
 
-ENEMY_ATTACK_PROBABILITY=0.4          #probability that the enemy attacks a resistance group
+    #maximum members in a resistance group
+    RESISTANCE_MEMBER_MAX=10              
 
-AGENCY_MEMBER_TARGET_PROBABILITY=0.2  #probability that an agency member is targeted
+    #probability that a resistance group is military (1-p = civilian)
+    MILITARY_GROUP_PROBABILITY=0.6      
 
-CIVILIAN_NUMBER=3                       #number of civilians
+    #probability of a spy infiltrating a resistance group
+    SPY_PROBABILITY=0.1   
+    
+    #probability that the entire group is killed
+    FULL_GROUP_KILLED_PROBABILITY=0.2  
 
-#Termination conditions
+    # min health of a resistance member
+    MIN_HEALTH=70
 
-MAX_KILLED_MEMBERS=50               #maximum number of killed resistance members
-MAX_INJURED_MEMBERS=30              #maximum number of injured resistance members
-AGENCY_INACTIVITY_LIMIT=20          #maximum time (seconds) all agency members can be inactive (killed or caught)
+    # max health of a resistance member
+    MAX_HEALTH=100
+
+#________________________________
+#----Agency member parameters-----
+#________________________________
+
+    #suspicion threshold for arresting potential spies        
+    SUSPICION_THRESHOLD=0.7    
+
+    #threshold for confirming spying activities during interrogation
+    SPY_CONFIRMATION_THRESHOLD=0.8 
+
+
+
+#probability of a mixed outcome (some killed, injured, or captured)
+MIXED_OUTCOME_PROBABILITY=0.8   
+
+#probability a member is killed in a partial outcome
+KILL_PROBABILITY=0.5     
+
+#probability a member is injured in a partial outcome
+INJURY_PROBABILITY=0.3  
+
+#probability a member is captured in a partial outcome
+CAPTURE_PROBABILITY=0.2             
+
+#recovery time (seconds) for light injuries
+LIGHT_INJURY_RECOVERY_TIME=10  
+
+#recover rate #this is better
+RECOVER_RATE=0.2
+
+#probability that an injury is sevee
+SEVERE_INJURY_PROBABILITY=0.3    
+
+#probability that the enemy attacks a resistance group
+ENEMY_ATTACK_PROBABILITY=0.4      
+
+#probability that an agency member is targeted
+AGENCY_MEMBER_TARGET_PROBABILITY=0.2  
+
+#number of civilians
+CIVILIAN_NUMBER=3   
+
+#________________________________
+#----Termination conditions-----
+#________________________________
+
+#maximum number of killed resistance members
+MAX_KILLED_MEMBERS=50    
+
+#maximum number of injured resistance members
+MAX_INJURED_MEMBERS=30    
+
+#maximum time (seconds) all agency members can be inactive (killed or caught)
+AGENCY_INACTIVITY_LIMIT=20          
