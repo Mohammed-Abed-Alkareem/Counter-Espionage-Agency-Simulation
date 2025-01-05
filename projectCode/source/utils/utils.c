@@ -96,6 +96,10 @@ int random_integer(int min, int max) {
     return rand() % (max - min + 1) + min;
 }
 
+int propability_choice(float propability) {
+    return (rand() / (float)RAND_MAX) < propability;
+}
+
 
 // function that create and random float between two values
 float random_float(float min, float max) {
