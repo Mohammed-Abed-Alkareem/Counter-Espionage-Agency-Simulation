@@ -22,6 +22,7 @@
 #include <limits.h>
 #include <sys/shm.h>
 #include <sys/msg.h>
+#include <errno.h>
 
 
 typedef struct {
