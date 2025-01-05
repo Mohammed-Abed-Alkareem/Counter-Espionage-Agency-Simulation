@@ -15,6 +15,9 @@ Config CONFIG;
 void cleanUp() {
     // Clean up code here when the process is terminated
 
+    // Free the memory allocated for the members
+    free(MEMBERS);
+
     printf("Resistance group process terminated\n");
 }
 
@@ -151,16 +154,6 @@ int main(int argc, char *argv[]) {
 
 
     }
-
-
-
-
-
-
-
-
-
-
 
     return 0;
 }
