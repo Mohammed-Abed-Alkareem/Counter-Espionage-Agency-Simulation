@@ -24,6 +24,9 @@
 #include <sys/msg.h>
 #include <errno.h>
 
+#include "message_queue.h"
+#include "utils.h"
+
 
 typedef struct {
     // Shared data
@@ -33,11 +36,12 @@ typedef struct {
 
 } SharedData;
 
-
-// message structures 
+//********************* */
+// Message Structers 
+//********************* */
 
 typedef struct  {
-    int type;
+    long type;
     int group_id;
     int member_num;
     int people_process_num;
@@ -46,26 +50,26 @@ typedef struct  {
 } PeopleContactReportMessage; // report message from people to resistance group for agency to know
 
 typedef struct  {
-    int type; // The group ID
+    long type; // The group ID
     int member_num;
     int state; // e.g., killed, severely injured, lightly injured
 } ResistanceMemberStateReportMessage; // report message from resistance group of his state to agency;
 
 
 typedef struct  {
-    int type; // The people number
+    long type; // The people number
     int state; // e.g., arrested, killed, caught, released
 } AgencyToPeopleStateMessage; // from agency to people to know their state
 
 typedef struct  {
-    int type; // The group number
+    long type; // The group number
     int member_number;
     int state; // e.g., arrested, killed, caught, released
     int time_sent;
 } AgencyToResistanceStateMessage ;
 
 typedef struct  {
-    int type;
+    long type;
     int process_id; // For general attack on all groups
     int group_id; // Specific attack on a member
     int group_type; // e.g., military, civilian
@@ -74,7 +78,7 @@ typedef struct  {
 
 
 typedef struct  {
-    int type; // Group number
+    long type; // Group number
     int member_id; // For specific attack
     int attack_type; // e.g., target, kill, definite kill
     int isGeneral; // For general attack
@@ -83,7 +87,7 @@ typedef struct  {
 
 
 typedef struct  {
-    int type; // Represents the people ID
+    long type; // Represents the people ID
     int num_of_sec; // Number of seconds communicated
     int group_id; // Group ID
     int group_type ; // e.g., military, civilian
@@ -93,4 +97,4 @@ typedef struct  {
 
 
 
-#endif // COMMON_H
+#endif //COMMON_H
