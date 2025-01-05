@@ -71,7 +71,7 @@ LIGHT_INJURY_RECOVERY_TIME=10
 #recover rate #this is better
 RECOVER_RATE=0.2
 
-#probability that an injury is sevee
+#probability that an injury is sever 
 SEVERE_INJURY_PROBABILITY=0.3    
 
 #probability that the enemy attacks a resistance group

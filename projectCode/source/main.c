@@ -17,8 +17,7 @@ int alarm_triggered = 0;//alarm signal flag
 key_t shm_data_key; // Shared memory key between all processes to share data
 
 // --- Message queues ---
-key_t msg_resistance_agency_key; // Message queue key between resistance groups and counter espionage agency
-
+int msg_queue_ids[7]; // Message queue ids
 
 // ------IPC ids------
 int shm_data_id = -1;
@@ -73,25 +72,65 @@ int main(int argc, char *argv[]) {
     // --- Message queues ---
     
     //create message queue key between resistance groups and counter espionage agency
-    msg_resistance_agency_key = key_generator('B');
-    msg_resistance_agency_id = msgget(msg_resistance_agency_key, IPC_CREAT | 0666);
-    if (msg_resistance_agency_id == -1) {
-        perror("Message queue creation failed");
-        cleanup();
-        exit(1);
-    }
+    // send reports from resistance member to agency about people contact with 
+    key_t resistance_to_agency_people_contact_report_key = key_generator('C');
+    // send reports from resistance member to agency about his state regularly
+    key_t resisitance_to_agency_member_state_report_key = key_generator('D');
+    // send reports from agency to people about their state when arrested , caught , killed ....
+    key_t agency_to_people_state_key = key_generator('E');
+    // send reports from agency to resistance member state when arrested , caught , killed ....
+    key_t agency_to_resistance_member_state_key = key_generator
+    // send reports from spy to enemy when he has info 
+    key_t spy_to_enemy_report_key = key_generator('F');
+    // enemy to resistance group attack message 
+    key_t enemy_to_resistance_group_attack_key = key_generator('G');
+    // resistance to people contact messge 
+    key_t resistance_to_people_contact_key = key_generator('H');
+
+    //create message queues for the keys
+    msg_queue_ids[0] =  create_message_queue(resistance_to_agency_people_contact_report_key);
+    msg_queue_ids[1] =  create_message_queue(resisitance_to_agency_member_state_report_key);
+    msg_queue_ids[2] =  create_message_queue(agency_to_people_state_key);
+    msg_queue_ids[3] =  create_message_queue(agency_to_resistance_member_state_key);
+    msg_queue_ids[4] =  create_message_queue(spy_to_enemy_report_key);
+    msg_queue_ids[5] =  create_message_queue(enemy_to_resistance_group_attack_key);
+    msg_queue_ids[6] =  create_message_queue(resistance_to_people_contact_key);
 
     // ============converting keys to string==================
+    // shared memory key 
     char shm_data_key_str[20];
-    char msg_resistance_agency_key_str[20];
-    char msg_agency_members_key_str[20];
 
     snprintf(shm_data_key_str, sizeof(shm_data_key_str), "%d", shm_data_key);
-    snprintf(msg_resistance_agency_key_str, sizeof(msg_resistance_agency_key_str), "%d", msg_resistance_agency_key);
 
-    //set environment variables
     setenv("SHM_DATA_KEY", shm_data_key_str, 1);
-    setenv("MSG_RESISTANCE_AGENCY_KEY", msg_resistance_agency_key_str, 1);
+
+    // message queue keys
+    char resistance_to_agency_people_contact_report_key_str[20];
+    char resisitance_to_agency_member_state_report_key_str[20];
+    char agency_to_people_state_key_str[20];
+    char agency_to_resistance_member_state_key_str[20];
+    char spy_to_enemy_report_key_str[20];
+    char enemy_to_resistance_group_attack_key_str[20];
+    char resistance_to_people_contact_key_str[20];
+
+    snprintf(resistance_to_agency_people_contact_report_key_str, sizeof(resistance_to_agency_people_contact_report_key_str), "%d", resistance_to_agency_people_contact_report_key);
+    snprintf(resisitance_to_agency_member_state_report_key_str, sizeof(resisitance_to_agency_member_state_report_key_str), "%d", resisitance_to_agency_member_state_report_key);
+    snprintf(agency_to_people_state_key_str, sizeof(agency_to_people_state_key_str), "%d", agency_to_people_state_key);
+    snprintf(agency_to_resistance_member_state_key_str, sizeof(agency_to_resistance_member_state_key_str), "%d", agency_to_resistance_member_state_key);
+    snprintf(spy_to_enemy_report_key_str, sizeof(spy_to_enemy_report_key_str), "%d", spy_to_enemy_report_key);
+    snprintf(enemy_to_resistance_group_attack_key_str, sizeof(enemy_to_resistance_group_attack_key_str), "%d", enemy_to_resistance_group_attack_key);
+    snprintf(resistance_to_people_contact_key_str, sizeof(resistance_to_people_contact_key_str), "%d", resistance_to_people_contact_key);
+
+    setenv("RESISTANCE_TO_AGENCY_PEOPLE_CONTACT_REPORT_KEY", resistance_to_agency_people_contact_report_key_str, 1);
+    setenv("RESISTANCE_TO_AGENCY_MEMBER_STATE_REPORT_KEY", resisitance_to_agency_member_state_report_key_str, 1);
+    setenv("AGENCY_TO_PEOPLE_STATE_KEY", agency_to_people_state_key_str, 1);
+    setenv("AGENCY_TO_RESISTANCE_MEMBER_STATE_KEY", agency_to_resistance_member_state_key_str, 1);
+    setenv("SPY_TO_ENEMY_REPORT_KEY", spy_to_enemy_report_key_str, 1);
+    setenv("ENEMY_TO_RESISTANCE_GROUP_ATTACK_KEY", enemy_to_resistance_group_attack_key_str, 1);
+    setenv("RESISTANCE_TO_PEOPLE_CONTACT_KEY", resistance_to_people_contact_key_str, 1);
+
+
+
 
     // --- Forking processes ---
 
@@ -108,7 +147,6 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < config.CIVILIAN_NUMBER; i++) {
         if ((civilian_pid[i] = fork()) == 0) {
             execl("./bin/civilian", "civilian", argv[1], NULL);
-            // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/civilian", "civilian", argv[1], NULL);
             perror("Civilian process failed");
             exit(1);
         }
@@ -154,26 +192,25 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-key_t key_generator(char letter){
 
-    key_t key = ftok(".", letter) ;
-    if(key == -1){
-        perror("Key generation failed");
-        exit(1);
-    }
 
-    return key ;
-}
 
 void handle_alarm(int signal) {
     if (signal == SIGALRM) {
     alarm_triggered = 1;
     }
 }
+
 void cleanup() {
     if (shm_data_id != -1) shmctl(shm_data_id, IPC_RMID, NULL);
     if (msg_resistance_agency_id != -1) msgctl(msg_resistance_agency_id, IPC_RMID, NULL);
     free(resistance_group_pid);
     free(civilian_pid);
+
+
+    for (int i = 0; i < 7; i++) {
+        delete_message_queue(msg_queue_ids[i]);
+    }
+
     printf("Resources cleaned up.\n");
 }
