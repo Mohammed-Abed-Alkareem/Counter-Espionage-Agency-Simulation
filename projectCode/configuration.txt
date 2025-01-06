@@ -13,7 +13,10 @@
     RESISTANCE_GROUP_CREATION_INTERVAL=1 
 
     #maximum number of resistance groups
-    RESISTANCE_GROUP_MAX=5         
+    RESISTANCE_GROUP_MAX=20
+
+    #initial number of resistance groups
+    RESISTANCE_GROUP_INITIAL=5         
 
 
 #________________________________
