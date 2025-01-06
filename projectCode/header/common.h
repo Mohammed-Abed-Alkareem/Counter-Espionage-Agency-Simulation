@@ -23,6 +23,7 @@
 #include <sys/shm.h>
 #include <sys/msg.h>
 #include <errno.h>
+#include <pthread.h>
 
 #include "message_queue.h"
 #include "utils.h"

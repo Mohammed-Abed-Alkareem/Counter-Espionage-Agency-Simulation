@@ -8,6 +8,25 @@ int main(int argc, char *argv[]);
 
 void cleanUp();
 
+
+
+///another enum for member type
+
+typedef enum {
+    SOCIALIST,
+    MILITARY,
+} MEMBER_TYPE;
+
+
+
+//enum
+typedef enum {
+    ALIVE,
+    DEAD
+} STATUS;
+
+
+
 //create a struct
 typedef struct {
 
@@ -22,17 +41,7 @@ typedef struct {
 } RESISTANCE_MEMBER;
 
 
-//enum
-typedef enum {
-    ALIVE,
-    DEAD
-} STATUS;
 
-///another enum for member type
 
-typedef enum {
-    SOCIALIST,
-    MILITARY,
-} MEMBER_TYPE;
 
 #endif // RESISTANCE_GROUP_H

@@ -1,18 +1,20 @@
 #include "main.h"
 
+
 // --- Globals ---
 pid_t *resistance_group_pid;
 pid_t counter_espionage_agency_pid;
 pid_t civilian_pid, enemy_pid;
 
-thread_t thread_fork_resistance_group;
+pthread_t thread_fork_resistance_group;
 
 int resistance_group_counter = 0;
 
 SharedData *shared_data;
 
 Config config;
-
+ 
+// int alarm_triggered = 0; 
 
 // --- IPC keys ---
 
@@ -45,6 +47,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
  
+    signal(SIGINT, handle_interrupt);//register the signal handler for interrupt signal
 
 // ============shared memories==================
 
@@ -82,7 +85,7 @@ int main(int argc, char *argv[]) {
     // send reports from agency to people about their state when arrested , caught , killed ....
     key_t agency_to_people_state_key = key_generator('E');
     // send reports from agency to resistance member state when arrested , caught , killed ....
-    key_t agency_to_resistance_member_state_key = key_generator
+    key_t agency_to_resistance_member_state_key = key_generator('I');
     // send reports from spy to enemy when he has info 
     key_t spy_to_enemy_report_key = key_generator('F');
     // enemy to resistance group attack message 
@@ -139,24 +142,24 @@ int main(int argc, char *argv[]) {
 
     // Fork counter espionage agency
     if ((counter_espionage_agency_pid = fork()) == 0) {
-        execl("./bin/counter_espionage_agency", "counter_espionage_agency", argv[1], NULL);
-        // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/counter_espionage_agency", "counter_espionage_agency", argv[1], NULL);
+        // execl("./bin/counter_espionage_agency", "counter_espionage_agency", argv[1], NULL);
+        execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/counter_espionage_agency", "counter_espionage_agency", argv[1], NULL);
         perror("Counter espionage agency process failed");
         exit(1);
     }
     
     //  Fork civilians
    if (civilian_pid = fork() == 0) {
-        execl("./bin/civilian", "civilian", argv[1], NULL);
-        // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/civilian", "civilian", argv[1], NULL);
+        // execl("./bin/civilian", "civilian", argv[1], NULL);
+        execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/civilian", "civilian", argv[1], NULL);
         perror("Civilian process failed");
         exit(1);
     }
 
     //fork enemy
     if (enemy_pid = fork() == 0) {
-        execl("./bin/enemy", "enemy", argv[1], NULL);
-        // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/enemy", "enemy", argv[1], NULL);
+        // execl("./bin/enemy", "enemy", argv[1], NULL);
+        execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/enemy", "enemy", argv[1], NULL);
         perror("Enemy process failed");
         exit(1);
     }
@@ -169,25 +172,28 @@ int main(int argc, char *argv[]) {
         cleanup();
         exit(1);
     }
-
+    char resistance_group_id_str[20];
     for (int i = 0; i < config.RESISTANCE_GROUP_INITIAL; i++) {
         if ((resistance_group_pid[i] = fork()) == 0) {
-            resistance_group_counter++;
-            execl("./bin/resistance_group", "resistance_group", argv[1], NULL);
-            // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv[1], NULL);
+            snprintf(resistance_group_id_str, sizeof(resistance_group_id_str), "%d", resistance_group_counter + 1);
+            // execl("./bin/resistance_group", "resistance_group", argv[1], resistance_group_id_str, NULL);
+            execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv[1], resistance_group_id_str, NULL);
             perror("Resistance group process failed");
             exit(1);
         }
+        resistance_group_counter++;
     }
 
     //make a thread for creating resistance group every specified interval
-    thread_create(&thread_fork_resistance_group, NULL, fork_resistance_group, NULL);
+    
 
+    pthread_create(&thread_fork_resistance_group, NULL ,fork_resistance_group, (void *)argv[1]);
 
+    
     while (1) {
         // check for exit conditions
         if (shared_data->number_killed_members >= config.MAX_KILLED_MEMBERS) {
-            exit_program(0);
+            exit_program();
         }
 
         //
@@ -215,8 +221,9 @@ void cleanup() {
 
     free(resistance_group_pid);
 
+
     // terminate the thread thread_fork_resistance_group
-    thread_cancel(thread_fork_resistance_group);
+    pthread_cancel(thread_fork_resistance_group);
 
 
 
@@ -229,38 +236,32 @@ void cleanup() {
     printf("Resources cleaned up.\n");
 }
 
-// Fork resistance group every specified interval use signal alarm
-void *fork_resistance_group(void *arg) {
-
-    int alarm_triggered = 0;//alarm signal flag
-
-    // Set alarm signal
-    signal(SIGALRM, alarm_handler);
-    alarm(config.RESISTANCE_GROUP_INTERVAL);
-
+// Fork resistance group every specified interval using sleep
+void* fork_resistance_group(void *arg) {
+    char *argv = (char *)arg;
+    printf("Fork resistance group thread created\n");    
+    char resistance_group_id_str[20];
     while (1) {
-        pause();
-        if (alarm_triggered) {
-            if (resistance_group_counter < config.RESISTANCE_GROUP_MAX) {
-                if ((resistance_group_pid[resistance_group_counter] = fork()) == 0) {
-                    execl("./bin/resistance_group", "resistance_group", NULL);
-                    // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", NULL);
-                    perror("Resistance group process failed");
-                    exit(1);
-                }
-                resistance_group_counter++;
-            } 
-            alarm_triggered = 0;
-            alarm(config.RESISTANCE_GROUP_INTERVAL);
+        sleep(config.RESISTANCE_GROUP_CREATION_INTERVAL);
+        if (resistance_group_counter < config.RESISTANCE_GROUP_MAX) {
+            printf("Forking resistance group\n");
+            if ((resistance_group_pid[resistance_group_counter] = fork()) == 0) {
+                snprintf(resistance_group_id_str, sizeof(resistance_group_id_str), "%d", resistance_group_counter + 1 );
+                // execl("./bin/resistance_group", "resistance_group", argv, resistance_group_id_str, NULL);
+                execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv, resistance_group_id_str, NULL);
+                perror("Resistance group process failed");
+                exit(1);
+            }
+            resistance_group_counter++;
         }
     }
-
 }
 
-// Alarm signal handler
-void alarm_handler(int signum) {
-    alarm_triggered = 1;
-}
+// // Alarm signal handler
+// void alarm_handler(int signum) {
+//     alarm_triggered = 1;
+//     printf("Alarm triggered\n");
+// }
 
 // Exit program
 void exit_program() {
@@ -274,4 +275,9 @@ void exit_program() {
     }
 
     exit(0);//it will call the cleanup function automatically
+}
+
+// Signal handler for interrupt signal
+void handle_interrupt(int signal) {
+    exit_program();
 }

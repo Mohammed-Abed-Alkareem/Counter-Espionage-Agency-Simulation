@@ -29,7 +29,7 @@ void *member_function(void *arg) {
     printf("Member %d created\n", member->id);
 
     // Infinite loop to simulate the member's life
-    while (1) {
+    // while (1) {
         // Wait for a random amount of time
         wait_random_time(CONFIG.RESISTANCE_MEMBER_MIN, CONFIG.RESISTANCE_MEMBER_MAX);
 
@@ -55,7 +55,7 @@ void *member_function(void *arg) {
                 }
             }
         }
-    }
+    // }
 
     return NULL;
 }
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     atexit(cleanUp);
 
     // check if the number of arguments is correct
-    if (argc != 2) {
+    if (argc != 3) {
         printf("Usage: %s <config_file>\n", argv[0]);
         return 1;
     }
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < NUM_OF_MEMBERS; i++) {
         // Initialize the member
         MEMBERS[i].id = i + 1;
-        MEMBERS[i].health = random_integer(CONFIG.RESISTANCE_MEMBER_HEALTH_MIN, CONFIG.RESISTANCE_MEMBER_HEALTH_MAX);
+        MEMBERS[i].health = random_integer(CONFIG.MIN_HEALTH, CONFIG.MAX_HEALTH);
         MEMBERS[i].status = ALIVE;
         MEMBERS[i].type = propability_choice(CONFIG.MILITARY_GROUP_PROBABILITY) ? MILITARY : SOCIALIST;
         MEMBERS[i].is_spy = (spy_exist < 1) ? propability_choice(CONFIG.SPY_PROBABILITY) : 0;
@@ -103,8 +103,8 @@ int main(int argc, char *argv[]) {
             spy_exist++;
         }
     }
-
-    printf("Resistance group process created\n");
+    int group_id = atoi(argv[2]);
+    printf("Resistance group process created %d\n", group_id);
 
 
     // create a thread for each member
@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
 
                 int wait_time = random_integer(CONFIG.RESISTANCE_MEMBER_MIN, CONFIG.RESISTANCE_MEMBER_MAX);
 
-                MEMBERS[i].health = random_integer(CONFIG.RESISTANCE_MEMBER_HEALTH_MIN, CONFIG.RESISTANCE_MEMBER_HEALTH_MAX);
+                MEMBERS[i].health = random_integer(CONFIG.MIN_HEALTH, CONFIG.MAX_HEALTH);
                 
                 MEMBERS[i].type = propability_choice(CONFIG.MILITARY_GROUP_PROBABILITY) ? MILITARY : SOCIALIST;
                 MEMBERS[i].is_spy = (spy_exist < 1) ? propability_choice(CONFIG.SPY_PROBABILITY) : 0;

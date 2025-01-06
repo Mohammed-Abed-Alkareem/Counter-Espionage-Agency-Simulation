@@ -3,57 +3,50 @@
 #----Simulation parameters-----
 #________________________________
 
-    #simulation time in seconds
-    SIMULATION_DURATION=300
+#simulation time in seconds
+SIMULATION_DURATION=300
 
-    #number of agency members               
-    COUNTER_ESPIONAGE_AGENCY_MEMBER=5     
-
-    #time interval (seconds) for creating new resistance groups
-    RESISTANCE_GROUP_CREATION_INTERVAL=1 
-
-    #maximum number of resistance groups
-    RESISTANCE_GROUP_MAX=20
-
-    #initial number of resistance groups
-    RESISTANCE_GROUP_INITIAL=5         
+#number of agency members               
+COUNTER_ESPIONAGE_AGENCY_MEMBER=5     
+#time interval (seconds) for creating new resistance groups
+RESISTANCE_GROUP_CREATION_INTERVAL=5
+#maximum number of resistance groups
+RESISTANCE_GROUP_MAX=20
+#initial number of resistance groups
+RESISTANCE_GROUP_INITIAL=5         
 
 
 #________________________________
 #----Resistance group parameters-----
 #________________________________      
 
-    #minimum members in a resistance group 
-    RESISTANCE_MEMBER_MIN=3               
+#minimum members in a resistance group 
+RESISTANCE_MEMBER_MIN=3               
 
-    #maximum members in a resistance group
-    RESISTANCE_MEMBER_MAX=10              
+#maximum members in a resistance group
+RESISTANCE_MEMBER_MAX=10              
 
-    #probability that a resistance group is military (1-p = civilian)
-    MILITARY_GROUP_PROBABILITY=0.6      
+#probability that a resistance group is military (1-p = civilian)
+MILITARY_GROUP_PROBABILITY=0.6      
 
-    #probability of a spy infiltrating a resistance group
-    SPY_PROBABILITY=0.1   
-    
-    #probability that the entire group is killed
-    FULL_GROUP_KILLED_PROBABILITY=0.2  
+#probability of a spy infiltrating a resistance group
+SPY_PROBABILITY=0.1   
 
-    # min health of a resistance member
-    MIN_HEALTH=70
-
-    # max health of a resistance member
-    MAX_HEALTH=100
+#probability that the entire group is killed
+FULL_GROUP_KILLED_PROBABILITY=0.2  
+# min health of a resistance member
+MIN_HEALTH=70
+# max health of a resistance member
+MAX_HEALTH=100
 
 #________________________________
 #----Agency member parameters-----
 #________________________________
 
-    #suspicion threshold for arresting potential spies        
-    SUSPICION_THRESHOLD=0.7    
-
-    #threshold for confirming spying activities during interrogation
-    SPY_CONFIRMATION_THRESHOLD=0.8 
-
+#suspicion threshold for arresting potential spies        
+SUSPICION_THRESHOLD=0.7    
+#threshold for confirming spying activities during interrogation
+SPY_CONFIRMATION_THRESHOLD=0.8 
 
 
 #probability of a mixed outcome (some killed, injured, or captured)
@@ -72,7 +65,7 @@ CAPTURE_PROBABILITY=0.2
 LIGHT_INJURY_RECOVERY_TIME=10  
 
 #recover rate #this is better
-RECOVER_RATE=0.2
+RECOVERY_RATE=0.2
 
 #probability that an injury is sever 
 SEVERE_INJURY_PROBABILITY=0.3    
