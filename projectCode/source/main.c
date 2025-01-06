@@ -47,8 +47,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
  
-    signal(SIGINT, handle_interrupt);//register the signal handler for interrupt signal
-
 // ============shared memories==================
 
     // Shared memory for data
@@ -299,7 +297,3 @@ void exit_program() {
     exit(0);//it will call the cleanup function automatically
 }
 
-// Signal handler for interrupt signal
-void handle_interrupt(int signal) {
-    exit_program();
-}

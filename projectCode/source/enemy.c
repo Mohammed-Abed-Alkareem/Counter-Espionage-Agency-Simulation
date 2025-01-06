@@ -1,5 +1,6 @@
 #include "enemy.h"
 
+Config config;
 
 
 // Function to clean up the process
@@ -27,25 +28,25 @@ int main(int argc, char *argv[]) {
     }
         
     char *key_str_target_prob = getenv("AGENCY_TO_ENEMY_TARGET_PROBABILITY_KEY");
-    if (key_str == NULL) {
+    if (key_str_target_prob == NULL) {
         perror("Error getting environment variable");
         exit(1);
     }
     char *key_str_attack_agency = getenv("ENEMY_TO_AGENCY_ATTACK_KEY");
-    if (key_str == NULL) {
+    if (key_str_attack_agency == NULL) {
         perror("Error getting environment variable");
         exit(1);
     }
     key_t key_target_prob = atoi(key_str_target_prob);
     key_t key_attack_agency = atoi(key_str_attack_agency);
     
-    struct AgencyToEnemyTargetProbabilityMessage target_prob_msg;
+    AgencyToEnemyTargetProbabilityMessage target_prob_msg;
    
-    struct EnemyToAgencyAttackMessage attack_msg;
+    EnemyToAgencyAttackMessage attack_msg;
 
     while (1) {
         // Check for messages from the counter espionage agency
-        if (msgrcv(msg_queue_id, &target_prob_msg, sizeof(target_prob_msg), 0, IPC_NOWAIT) != -1) {
+        if (msgrcv(key_target_prob, &target_prob_msg, sizeof(target_prob_msg), 0, IPC_NOWAIT) != -1) {
             // Process the message
             printf("Received target probability message from counter espionage agency\n");
             printf("Target probability: %f\n", target_prob_msg.target_probability);
@@ -59,11 +60,11 @@ int main(int argc, char *argv[]) {
                 if (msgsnd(key_attack_agency, &attack_msg, sizeof(attack_msg), 0) == -1) {
                     perror("Error sending attack message to agency");
                 }
-)
+            } else {
+                printf("Enemy will not attack the agency member %d\n", target_prob_msg.member_id);
             }
         }
         // Check for message from the spy
-
         
     }
     

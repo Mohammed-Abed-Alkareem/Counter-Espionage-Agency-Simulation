@@ -95,26 +95,23 @@ int main(int argc, char *argv[]) {
     }
     key_t key_target_prob = atoi(key_str);
 
-    //create a thread will send the target probability to the enemy
-    pthread_t thread_send_target_prob;
-    pthread_create(&thread_send_target_prob, NULL, send_target_probability, (void *)&key_target_prob);
 
-    
+
     //create the analysis thread
     if (pthread_create(&analysis_thread, NULL, analyze_data, (void *)&config) != 0) {
         perror("Failed to create analysis thread");
         return 1;
     }
-
+    AgencyToEnemyTargetProbabilityMessage target_prob_msg;
     // every regular time send the target probability to the enemy
     while (1){
-        sleep(5);
+        sleep(5);//send the target probability to the enemy every 5 seconds
         for (int i = 0; i < config.COUNTER_ESPIONAGE_AGENCY_MEMBER; i++) {
             // Send the target probability to the enemy
-            struct AgencyToEnemyTargetProbabilityMessage target_prob_msg;
-            target_prob_msg.type = MEMBERS[i].id;
+            
+            target_prob_msg.member_id = MEMBERS[i].id;
             target_prob_msg.target_probability = MEMBERS[i].target_probability;
-            if (msgsnd(key_target_prob, &target_prob_msg, sizeof(target_prob_msg), 0) == -1) {
+            if (msgsnd(key_target_prob, &target_prob_msg, sizeof(target_prob_msg.target_probability) + sizeof(target_prob_msg.member_id), 0) == -1) {
                 perror("Error sending target probability message to enemy");
             }
         }
@@ -138,7 +135,7 @@ void* member_function(void* arg) {
         pthread_mutex_lock(&agency_lock);
         member->time_with_agency++;
         // update the target probability related to the time with the agency randomly
-        member->target_probability = time_with_agency * random_float(0.1, 0.9);
+        member->target_probability = member->time_with_agency * random_float(0.1, 0.9);
 
         pthread_mutex_unlock(&agency_lock);
     }

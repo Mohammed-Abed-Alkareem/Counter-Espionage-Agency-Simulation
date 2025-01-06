@@ -43,7 +43,7 @@ typedef struct {
     int RESISTANCE_GROUP_INITIAL;
     int MAX_HEALTH;
     int MIN_HEALTH;
-    float RATE_KEEP_ARRESTING_RELEASING ;
+
 } Config;
 
 
