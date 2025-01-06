@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
         printf("Memory allocation failed\n");
         return 1;
     }
-
+    int group_id = atoi(argv[2]);
     // Initialize the members information
     for (int i = 0; i < NUM_OF_MEMBERS; i++) {
         // Initialize the member
@@ -102,8 +102,9 @@ int main(int argc, char *argv[]) {
         if (MEMBERS[i].is_spy) {
             spy_exist++;
         }
+        MEMBERS[i].group_id = group_id;//get the group id from the command line
     }
-    int group_id = atoi(argv[2]);
+    
     printf("Resistance group process created %d\n", group_id);
 
 

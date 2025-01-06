@@ -22,7 +22,7 @@ Config config;
 key_t shm_data_key; // Shared memory key between all processes to share data
 
 // --- Message queues ---
-int msg_queue_ids[7]; // Message queue ids
+int msg_queue_ids[9]; // Message queue ids
 
 // ------IPC ids------
 int shm_data_id = -1;
@@ -61,6 +61,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+
     // Attach shared memory to shared_data
     shared_data = (SharedData *)shmat(shm_data_id, NULL, 0);
     if (shared_data == (void *)-1) {
@@ -92,6 +93,12 @@ int main(int argc, char *argv[]) {
     key_t enemy_to_resistance_group_attack_key = key_generator('G');
     // resistance to people contact messge 
     key_t resistance_to_people_contact_key = key_generator('H');
+    // target probability from agency to enemy
+    key_t agency_to_enemy_target_probability_key = key_generator('J');
+    // attack message from enemy to counter espionage agency 
+    key_t enemy_to_agency_attack_key = key_generator('K');
+
+
 
     //create message queues for the keys
     msg_queue_ids[0] =  create_message_queue(resistance_to_agency_people_contact_report_key);
@@ -101,6 +108,9 @@ int main(int argc, char *argv[]) {
     msg_queue_ids[4] =  create_message_queue(spy_to_enemy_report_key);
     msg_queue_ids[5] =  create_message_queue(enemy_to_resistance_group_attack_key);
     msg_queue_ids[6] =  create_message_queue(resistance_to_people_contact_key);
+    msg_queue_ids[7] =  create_message_queue(agency_to_enemy_target_probability_key);
+    msg_queue_ids[8] =  create_message_queue(enemy_to_agency_attack_key);
+
 
     // ============converting keys to string==================
     // shared memory key 
@@ -118,6 +128,8 @@ int main(int argc, char *argv[]) {
     char spy_to_enemy_report_key_str[20];
     char enemy_to_resistance_group_attack_key_str[20];
     char resistance_to_people_contact_key_str[20];
+    char agency_to_enemy_target_probability_key_str[20];
+    char enemy_to_agency_attack_key_str[20];
 
     snprintf(resistance_to_agency_people_contact_report_key_str, sizeof(resistance_to_agency_people_contact_report_key_str), "%d", resistance_to_agency_people_contact_report_key);
     snprintf(resisitance_to_agency_member_state_report_key_str, sizeof(resisitance_to_agency_member_state_report_key_str), "%d", resisitance_to_agency_member_state_report_key);
@@ -126,6 +138,8 @@ int main(int argc, char *argv[]) {
     snprintf(spy_to_enemy_report_key_str, sizeof(spy_to_enemy_report_key_str), "%d", spy_to_enemy_report_key);
     snprintf(enemy_to_resistance_group_attack_key_str, sizeof(enemy_to_resistance_group_attack_key_str), "%d", enemy_to_resistance_group_attack_key);
     snprintf(resistance_to_people_contact_key_str, sizeof(resistance_to_people_contact_key_str), "%d", resistance_to_people_contact_key);
+    snprintf(agency_to_enemy_target_probability_key_str, sizeof(agency_to_enemy_target_probability_key_str), "%d", agency_to_enemy_target_probability_key);
+    snprintf(enemy_to_agency_attack_key_str, sizeof(enemy_to_agency_attack_key_str), "%d", enemy_to_agency_attack_key);
 
     setenv("RESISTANCE_TO_AGENCY_PEOPLE_CONTACT_REPORT_KEY", resistance_to_agency_people_contact_report_key_str, 1);
     setenv("RESISTANCE_TO_AGENCY_MEMBER_STATE_REPORT_KEY", resisitance_to_agency_member_state_report_key_str, 1);
@@ -134,6 +148,8 @@ int main(int argc, char *argv[]) {
     setenv("SPY_TO_ENEMY_REPORT_KEY", spy_to_enemy_report_key_str, 1);
     setenv("ENEMY_TO_RESISTANCE_GROUP_ATTACK_KEY", enemy_to_resistance_group_attack_key_str, 1);
     setenv("RESISTANCE_TO_PEOPLE_CONTACT_KEY", resistance_to_people_contact_key_str, 1);
+    setenv("AGENCY_TO_ENEMY_TARGET_PROBABILITY_KEY", agency_to_enemy_target_probability_key_str, 1);
+    setenv("ENEMY_TO_AGENCY_ATTACK_KEY", enemy_to_agency_attack_key_str, 1);
 
 
 
@@ -142,24 +158,24 @@ int main(int argc, char *argv[]) {
 
     // Fork counter espionage agency
     if ((counter_espionage_agency_pid = fork()) == 0) {
-        // execl("./bin/counter_espionage_agency", "counter_espionage_agency", argv[1], NULL);
-        execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/counter_espionage_agency", "counter_espionage_agency", argv[1], NULL);
+        execl("./bin/counter_espionage_agency", "counter_espionage_agency", argv[1], NULL);
+        // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/counter_espionage_agency", "counter_espionage_agency", argv[1], NULL);
         perror("Counter espionage agency process failed");
         exit(1);
     }
     
     //  Fork civilians
    if (civilian_pid = fork() == 0) {
-        // execl("./bin/civilian", "civilian", argv[1], NULL);
-        execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/civilian", "civilian", argv[1], NULL);
+        execl("./bin/civilian", "civilian", argv[1], NULL);
+        // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/civilian", "civilian", argv[1], NULL);
         perror("Civilian process failed");
         exit(1);
     }
 
     //fork enemy
     if (enemy_pid = fork() == 0) {
-        // execl("./bin/enemy", "enemy", argv[1], NULL);
-        execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/enemy", "enemy", argv[1], NULL);
+        execl("./bin/enemy", "enemy", argv[1], NULL);
+        // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/enemy", "enemy", argv[1], NULL);
         perror("Enemy process failed");
         exit(1);
     }
@@ -176,8 +192,8 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < config.RESISTANCE_GROUP_INITIAL; i++) {
         if ((resistance_group_pid[i] = fork()) == 0) {
             snprintf(resistance_group_id_str, sizeof(resistance_group_id_str), "%d", resistance_group_counter + 1);
-            // execl("./bin/resistance_group", "resistance_group", argv[1], resistance_group_id_str, NULL);
-            execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv[1], resistance_group_id_str, NULL);
+            execl("./bin/resistance_group", "resistance_group", argv[1], resistance_group_id_str, NULL);
+            // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv[1], resistance_group_id_str, NULL);
             perror("Resistance group process failed");
             exit(1);
         }
@@ -199,6 +215,12 @@ int main(int argc, char *argv[]) {
         //
         //
         // Add more exit conditions here
+        //
+        //
+        if (shared_data->number_injured_members >= config.MAX_INJURED_MEMBERS) {
+            exit_program();
+        }
+        
     }
 
 
@@ -247,8 +269,8 @@ void* fork_resistance_group(void *arg) {
             printf("Forking resistance group\n");
             if ((resistance_group_pid[resistance_group_counter] = fork()) == 0) {
                 snprintf(resistance_group_id_str, sizeof(resistance_group_id_str), "%d", resistance_group_counter + 1 );
-                // execl("./bin/resistance_group", "resistance_group", argv, resistance_group_id_str, NULL);
-                execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv, resistance_group_id_str, NULL);
+                execl("./bin/resistance_group", "resistance_group", argv, resistance_group_id_str, NULL);
+                // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv, resistance_group_id_str, NULL);
                 perror("Resistance group process failed");
                 exit(1);
             }

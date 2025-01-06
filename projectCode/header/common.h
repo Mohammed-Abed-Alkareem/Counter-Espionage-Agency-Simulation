@@ -86,6 +86,11 @@ typedef struct  {
     int time_sent;
 } EnemyToResistanceGroupAttackMessage ;
 
+typedef struct  {
+    int type; // Represents the member ID
+    // int attack_type; // e.g., target, kill, definite kill
+}EnemyToAgencyAttackMessage ; // enemy to agency attack message structure
+
 
 typedef struct  {
     long type; // Represents the people ID
@@ -95,7 +100,10 @@ typedef struct  {
     int member_id; // Member ID
 }ResistanceMemberToPeopleContactMessage ; // resistance group member contac with people message structure 
 
-
+typedef struct  {
+    int member_id; // Represents the people ID
+    float target_probability; // Probability of being targeted
+} AgencyToEnemyTargetProbabilityMessage; // agency to enemy target probability message structure
 
 
 #endif //COMMON_H

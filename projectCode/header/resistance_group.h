@@ -37,6 +37,7 @@ typedef struct {
     STATUS status;
     MEMBER_TYPE type;
     int is_spy;
+    int group_id;
 
 } RESISTANCE_MEMBER;
 

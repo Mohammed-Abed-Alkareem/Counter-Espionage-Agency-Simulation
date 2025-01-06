@@ -43,8 +43,9 @@ typedef struct {
     int RESISTANCE_GROUP_INITIAL;
     int MAX_HEALTH;
     int MIN_HEALTH;
-    float RECOVER_RATE;
+    float RATE_KEEP_ARRESTING_RELEASING ;
 } Config;
+
 
 int load_config(const char *filename, Config *config);
 
