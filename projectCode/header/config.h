@@ -40,7 +40,12 @@ typedef struct {
     float CIVILIAN_GROUP_ATTACK_RATE;
     float RATIO_SPY;
     int MAX_SURVIVAL_TIME;
+    int RESISTANCE_GROUP_INITIAL;
+    int MAX_HEALTH;
+    int MIN_HEALTH;
+
 } Config;
+
 
 int load_config(const char *filename, Config *config);
 

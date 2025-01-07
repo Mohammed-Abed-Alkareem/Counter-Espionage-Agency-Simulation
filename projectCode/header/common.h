@@ -23,6 +23,7 @@
 #include <sys/shm.h>
 #include <sys/msg.h>
 #include <errno.h>
+#include <pthread.h>
 
 #include "message_queue.h"
 #include "utils.h"
@@ -85,6 +86,11 @@ typedef struct  {
     int time_sent;
 } EnemyToResistanceGroupAttackMessage ;
 
+typedef struct  {
+    int type; // Represents the member ID
+    // int attack_type; // e.g., target, kill, definite kill
+}EnemyToAgencyAttackMessage ; // enemy to agency attack message structure
+
 
 typedef struct  {
     long type; // Represents the people ID
@@ -94,6 +100,44 @@ typedef struct  {
     int member_id; // Member ID
 }ResistanceMemberToPeopleContactMessage ; // resistance group member contac with people message structure 
 
+typedef struct  {
+    int member_id; // Represents the people ID
+    float target_probability; // Probability of being targeted
+} AgencyToEnemyTargetProbabilityMessage; // agency to enemy target probability message structure
+
+
+////////////////
+
+typedef enum {
+    SOCIALIST,
+    MILITARY,
+} MEMBER_TYPE;
+
+
+
+//enum
+typedef  enum {
+    KILLED,
+    INJURED,
+    CAPTURED,
+    ALIVE
+} STATUS;
+
+
+
+//create a struct
+typedef struct {
+
+    //add member info
+    int id;
+    pthread_t thread_id;
+    int health;
+    STATUS status;
+    MEMBER_TYPE type;
+    int is_spy;
+    int group_id;
+
+} RESISTANCE_MEMBER;
 
 
 

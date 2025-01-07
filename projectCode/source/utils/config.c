@@ -32,6 +32,7 @@ int load_config(const char *filename, Config *config) {
     config->MAX_INJURED_MEMBERS = 30;
     config->AGENCY_INACTIVITY_LIMIT = 20;
     config->CIVILIAN_NUMBER = 100;
+    config->RESISTANCE_GROUP_INITIAL = 5;
 
     // Defaults for new parameters
     config->RATE_KEEP_ARRESTING_RELEASING = 0.5f;
@@ -44,6 +45,7 @@ int load_config(const char *filename, Config *config) {
     config->CIVILIAN_GROUP_ATTACK_RATE = 0.4f;
     config->RATIO_SPY = 0.1f;
     config->MAX_SURVIVAL_TIME = 365;
+    config->RESISTANCE_GROUP_INITIAL = 5;
 
     char line[256];
     while (fgets(line, sizeof(line), file)) {
@@ -71,6 +73,9 @@ int load_config(const char *filename, Config *config) {
                 else if (strcmp(key, "ATTACK_DURATION_INCREASE") == 0) config->ATTACK_DURATION_INCREASE = value;
                 else if (strcmp(key, "PEOPLE_INTERACTION_RANGE") == 0) config->PEOPLE_INTERACTION_RANGE = value;
                 else if (strcmp(key, "MAX_SURVIVAL_TIME") == 0) config->MAX_SURVIVAL_TIME = value;
+                else if (strcmp(key, "RESISTANCE_GROUP_INITIAL") == 0) config->RESISTANCE_GROUP_INITIAL = value;
+                else if (strcmp(key, "MAX_HEALTH") == 0) config->MAX_HEALTH = value;
+                else if (strcmp(key, "MIN_HEALTH") == 0) config->MIN_HEALTH = value;
                 else {
                     fprintf(stderr, "Unexpected integer key: %s\n", key);
                 }

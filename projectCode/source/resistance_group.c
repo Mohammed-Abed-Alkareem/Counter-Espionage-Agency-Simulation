@@ -29,7 +29,7 @@ void *member_function(void *arg) {
     printf("Member %d created\n", member->id);
 
     // Infinite loop to simulate the member's life
-    while (1) {
+    // while (1) {
         // Wait for a random amount of time
         wait_random_time(CONFIG.RESISTANCE_MEMBER_MIN, CONFIG.RESISTANCE_MEMBER_MAX);
 
@@ -48,14 +48,14 @@ void *member_function(void *arg) {
             if (member->health <= 0) {
                 // Print a message that the member is dead
                 printf("Member %d is dead\n", member->id);
-                member->status = DEAD;
+                member->status = KILLED;
                 NUM_OF_EXISTING_MEMBERS--;
                 if (member->is_spy) {
                     spy_exist--;
                 }
             }
         }
-    }
+    // }
 
     return NULL;
 }
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     atexit(cleanUp);
 
     // check if the number of arguments is correct
-    if (argc != 2) {
+    if (argc != 4) {
         printf("Usage: %s <config_file>\n", argv[0]);
         return 1;
     }
@@ -90,21 +90,25 @@ int main(int argc, char *argv[]) {
         printf("Memory allocation failed\n");
         return 1;
     }
+    int group_id = atoi(argv[2]);
+
+    int group_type = atoi(argv[3]);
 
     // Initialize the members information
     for (int i = 0; i < NUM_OF_MEMBERS; i++) {
         // Initialize the member
         MEMBERS[i].id = i + 1;
-        MEMBERS[i].health = random_integer(CONFIG.RESISTANCE_MEMBER_HEALTH_MIN, CONFIG.RESISTANCE_MEMBER_HEALTH_MAX);
+        MEMBERS[i].health = random_integer(CONFIG.MIN_HEALTH, CONFIG.MAX_HEALTH);
         MEMBERS[i].status = ALIVE;
         MEMBERS[i].type = propability_choice(CONFIG.MILITARY_GROUP_PROBABILITY) ? MILITARY : SOCIALIST;
         MEMBERS[i].is_spy = (spy_exist < 1) ? propability_choice(CONFIG.SPY_PROBABILITY) : 0;
         if (MEMBERS[i].is_spy) {
             spy_exist++;
         }
+        MEMBERS[i].group_id = group_id;//get the group id from the command line
     }
-
-    printf("Resistance group process created\n");
+    
+    printf("Resistance group process created %d\n", group_id);
 
 
     // create a thread for each member
@@ -123,15 +127,15 @@ int main(int argc, char *argv[]) {
     while (NUM_OF_EXISTING_MEMBERS > 0){
 
         for (int i = 0; i < NUM_OF_MEMBERS; i++) {
-            if (MEMBERS[i].status == DEAD) {
+            if (MEMBERS[i].status == KILLED) {
                 pthread_join(MEMBERS[i].thread_id, NULL);
                 // Create a new thread for the dead member
 
                 int wait_time = random_integer(CONFIG.RESISTANCE_MEMBER_MIN, CONFIG.RESISTANCE_MEMBER_MAX);
 
-                MEMBERS[i].health = random_integer(CONFIG.RESISTANCE_MEMBER_HEALTH_MIN, CONFIG.RESISTANCE_MEMBER_HEALTH_MAX);
+                MEMBERS[i].health = random_integer(CONFIG.MIN_HEALTH, CONFIG.MAX_HEALTH);
                 
-                MEMBERS[i].type = propability_choice(CONFIG.MILITARY_GROUP_PROBABILITY) ? MILITARY : SOCIALIST;
+                MEMBERS[i].type = group_type;
                 MEMBERS[i].is_spy = (spy_exist < 1) ? propability_choice(CONFIG.SPY_PROBABILITY) : 0;
                 if (MEMBERS[i].is_spy) {
                     spy_exist++;
