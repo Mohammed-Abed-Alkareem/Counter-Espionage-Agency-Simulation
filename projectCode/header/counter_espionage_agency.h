@@ -9,12 +9,7 @@ void* member_function(void* arg);
 void analyze_reports();
 void replace_member(int index);
 
-typedef  enum {
-    KILLED,
-    INJURED,
-    CAPTURED,
-    ALIVE
-} STATUS;
+
 
 typedef struct {
     int id;

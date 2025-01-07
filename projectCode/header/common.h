@@ -106,4 +106,39 @@ typedef struct  {
 } AgencyToEnemyTargetProbabilityMessage; // agency to enemy target probability message structure
 
 
+////////////////
+
+typedef enum {
+    SOCIALIST,
+    MILITARY,
+} MEMBER_TYPE;
+
+
+
+//enum
+typedef  enum {
+    KILLED,
+    INJURED,
+    CAPTURED,
+    ALIVE
+} STATUS;
+
+
+
+//create a struct
+typedef struct {
+
+    //add member info
+    int id;
+    pthread_t thread_id;
+    int health;
+    STATUS status;
+    MEMBER_TYPE type;
+    int is_spy;
+    int group_id;
+
+} RESISTANCE_MEMBER;
+
+
+
 #endif //COMMON_H

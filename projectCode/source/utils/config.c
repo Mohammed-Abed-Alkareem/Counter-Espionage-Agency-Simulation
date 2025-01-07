@@ -1,5 +1,4 @@
 #include "config.h"
-#include <math.h>
 
 
 // Function to load configuration settings from a specified file

@@ -187,11 +187,15 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     char resistance_group_id_str[20];
+    int type;
+    char resesistance_group_type_str[20];
     for (int i = 0; i < config.RESISTANCE_GROUP_INITIAL; i++) {
         if ((resistance_group_pid[i] = fork()) == 0) {
-            snprintf(resistance_group_id_str, sizeof(resistance_group_id_str), "%d", resistance_group_counter + 1);
-            execl("./bin/resistance_group", "resistance_group", argv[1], resistance_group_id_str, NULL);
-            // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv[1], resistance_group_id_str, NULL);
+            type = propability_choice(config.MILITARY_GROUP_PROBABILITY) ? MILITARY : SOCIALIST;
+            snprintf(resesistance_group_type_str, sizeof(resesistance_group_type_str), "%d", type);
+            snprintf(resistance_group_id_str, sizeof(resistance_group_id_str), "%d", resistance_group_counter + 1 );
+            execl("./bin/resistance_group", "resistance_group", argv[1], resistance_group_id_str, resesistance_group_type_str, NULL);
+            // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv[1], resistance_group_id_str, resesistance_group_type_str, NULL);
             perror("Resistance group process failed");
             exit(1);
         }
@@ -261,14 +265,20 @@ void* fork_resistance_group(void *arg) {
     char *argv = (char *)arg;
     printf("Fork resistance group thread created\n");    
     char resistance_group_id_str[20];
+
+    int type;
+
+    char resesistance_group_type_str[20];
     while (1) {
         sleep(config.RESISTANCE_GROUP_CREATION_INTERVAL);
         if (resistance_group_counter < config.RESISTANCE_GROUP_MAX) {
             printf("Forking resistance group\n");
             if ((resistance_group_pid[resistance_group_counter] = fork()) == 0) {
+                type = propability_choice(config.MILITARY_GROUP_PROBABILITY) ? MILITARY : SOCIALIST;
+                snprintf(resesistance_group_type_str, sizeof(resesistance_group_type_str), "%d", type);
                 snprintf(resistance_group_id_str, sizeof(resistance_group_id_str), "%d", resistance_group_counter + 1 );
-                execl("./bin/resistance_group", "resistance_group", argv, resistance_group_id_str, NULL);
-                // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv, resistance_group_id_str, NULL);
+                execl("./bin/resistance_group", "resistance_group", argv, resistance_group_id_str, resesistance_group_type_str, NULL);
+                // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv, resistance_group_id_str, resesistance_group_type_str, NULL);
                 perror("Resistance group process failed");
                 exit(1);
             }

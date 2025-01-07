@@ -48,7 +48,7 @@ void *member_function(void *arg) {
             if (member->health <= 0) {
                 // Print a message that the member is dead
                 printf("Member %d is dead\n", member->id);
-                member->status = DEAD;
+                member->status = KILLED;
                 NUM_OF_EXISTING_MEMBERS--;
                 if (member->is_spy) {
                     spy_exist--;
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     atexit(cleanUp);
 
     // check if the number of arguments is correct
-    if (argc != 3) {
+    if (argc != 4) {
         printf("Usage: %s <config_file>\n", argv[0]);
         return 1;
     }
@@ -91,6 +91,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     int group_id = atoi(argv[2]);
+
+    int group_type = atoi(argv[3]);
+
     // Initialize the members information
     for (int i = 0; i < NUM_OF_MEMBERS; i++) {
         // Initialize the member
@@ -124,7 +127,7 @@ int main(int argc, char *argv[]) {
     while (NUM_OF_EXISTING_MEMBERS > 0){
 
         for (int i = 0; i < NUM_OF_MEMBERS; i++) {
-            if (MEMBERS[i].status == DEAD) {
+            if (MEMBERS[i].status == KILLED) {
                 pthread_join(MEMBERS[i].thread_id, NULL);
                 // Create a new thread for the dead member
 
@@ -132,7 +135,7 @@ int main(int argc, char *argv[]) {
 
                 MEMBERS[i].health = random_integer(CONFIG.MIN_HEALTH, CONFIG.MAX_HEALTH);
                 
-                MEMBERS[i].type = propability_choice(CONFIG.MILITARY_GROUP_PROBABILITY) ? MILITARY : SOCIALIST;
+                MEMBERS[i].type = group_type;
                 MEMBERS[i].is_spy = (spy_exist < 1) ? propability_choice(CONFIG.SPY_PROBABILITY) : 0;
                 if (MEMBERS[i].is_spy) {
                     spy_exist++;
