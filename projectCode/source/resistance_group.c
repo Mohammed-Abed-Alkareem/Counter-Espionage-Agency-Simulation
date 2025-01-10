@@ -9,6 +9,16 @@ RESISTANCE_MEMBER *MEMBERS = NULL;
 
 Config CONFIG;
 
+int general_attack = 0;
+pthread_mutex_t general_attack_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// message queue vars 
+int msg_regular_report_id = -1;
+int msg_resistance_group_to_people_id = -1;
+int msg_resistance_group_to_agency_communication_report_id = -1;
+int msg_resistance_group_to_enemy_id = -1;
+int msg_enemy_to_resistance_group_id = -1;
+int msg_agency_to_resistance_group_id = -1;
 
 
 
@@ -76,6 +86,56 @@ int main(int argc, char *argv[]) {
         printf("Failed to load the configuration file\n");
         return 1;
     }
+
+
+    // get env for message queue keys
+    char *key_str_regular_report = getenv("RESISTANCE_GROUP_TO_PEOPLE_KEY");
+    if (key_str_regular_report == NULL) {
+        perror("Error getting environment variable");
+        return 1;
+    }   
+    msg_resistance_group_to_people_id = atoi(key_str_regular_report);
+
+    char *key_str_communication_report = getenv("RESISTANCE_GROUP_TO_AGENCY_COMMUNICATION_REPORT_KEY");
+    if (key_str_communication_report == NULL) {
+        perror("Error getting environment variable");
+        return 1;
+    }   
+    msg_resistance_group_to_agency_communication_report_id = atoi(key_str_communication_report);
+
+    char *key_str_enemy = getenv("RESISTANCE_GROUP_TO_ENEMY_KEY");
+    if (key_str_enemy == NULL) {
+        perror("Error getting environment variable");
+        return 1;
+    }
+    msg_resistance_group_to_enemy_id = atoi(key_str_enemy);
+
+    char *key_str_enemy_to_resistance = getenv("ENEMY_TO_RESISTANCE_GROUP_KEY");
+    if (key_str_enemy_to_resistance == NULL) {
+        perror("Error getting environment variable");
+        return 1;
+    }
+    msg_enemy_to_resistance_group_id = atoi(key_str_enemy_to_resistance);
+
+    char *key_str_agency_to_resistance = getenv("AGENCY_TO_RESISTANCE_GROUP_KEY");
+    if (key_str_agency_to_resistance == NULL) {
+        perror("Error getting environment variable");
+        return 1;
+    }
+    msg_agency_to_resistance_group_id = atoi(key_str_agency_to_resistance);
+
+
+    char *key_str_regular_report = getenv("RESISTANCE_TO_AGENCY_MEMBER_STATE_REPORT_KEY");
+
+    if (key_str_regular_report == NULL) {
+        perror("Error getting environment variable");
+        return 1;
+    }
+
+    msg_regular_report_id = atoi(key_str_regular_report);
+
+
+    // end of setting up message queues ids
 
     // Seed the random number generator with pid and time
     srand(time(NULL) ^ getpid());

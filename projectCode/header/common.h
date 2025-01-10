@@ -29,6 +29,24 @@
 #include "utils.h"
 
 
+
+//state 
+typedef enum {
+    ACTIVE,
+    INACTIVE,
+    CAPTURED,
+    ESCAPED,
+    KILLED,
+    LightINJURED,
+    SERIOUSLYINJURED,
+    DEAD,
+    SPY,
+    INVISTIGATED,
+    ARREST,
+    ALIVE
+} STATE;
+
+
 typedef struct {
     // Shared data
     int number_killed_members;
@@ -65,7 +83,7 @@ typedef struct  {
 typedef struct  {
     long type; // The group number
     int member_number;
-    int state; // e.g., arrested, killed, caught, released
+    STATE state; // e.g., arrested, killed, caught, released
     int time_sent;
 } AgencyToResistanceStateMessage ;
 
@@ -114,16 +132,7 @@ typedef enum {
 } MEMBER_TYPE;
 
 
-
-//enum
-typedef  enum {
-    KILLED,
-    INJURED,
-    CAPTURED,
-    ALIVE
-} STATUS;
-
-
+typedef STATE STATUS;
 
 //create a struct
 typedef struct {

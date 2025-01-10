@@ -287,11 +287,6 @@ void* fork_resistance_group(void *arg) {
     }
 }
 
-// // Alarm signal handler
-// void alarm_handler(int signum) {
-//     alarm_triggered = 1;
-//     printf("Alarm triggered\n");
-// }
 
 // Exit program
 void exit_program() {
