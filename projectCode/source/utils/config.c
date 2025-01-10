@@ -46,6 +46,13 @@ int load_config(const char *filename, Config *config) {
     config->RATIO_SPY = 0.1f;
     config->MAX_SURVIVAL_TIME = 365;
     config->RESISTANCE_GROUP_INITIAL = 5;
+    config->MAX_HEALTH = 100;
+    config->MIN_HEALTH = 0;
+    config->MIN_CONTACT_TIME = 5;
+    config->MAX_CONTACT_TIME = 20;
+    config->MAX_ATTACK_DAMAGE = 20;
+    config->MIN_ATTACK_DAMAGE = 5;
+
 
     char line[256];
     while (fgets(line, sizeof(line), file)) {
@@ -76,6 +83,10 @@ int load_config(const char *filename, Config *config) {
                 else if (strcmp(key, "RESISTANCE_GROUP_INITIAL") == 0) config->RESISTANCE_GROUP_INITIAL = value;
                 else if (strcmp(key, "MAX_HEALTH") == 0) config->MAX_HEALTH = value;
                 else if (strcmp(key, "MIN_HEALTH") == 0) config->MIN_HEALTH = value;
+                else if (strcmp(key, "MIN_CONTACT_TIME") == 0) config->MIN_CONTACT_TIME = value;
+                else if (strcmp(key, "MAX_CONTACT_TIME") == 0) config->MAX_CONTACT_TIME = value;
+                else if (strcmp(key, "MAX_ATTACK_DAMAGE") == 0) config->MAX_ATTACK_DAMAGE = value;
+                else if (strcmp(key, "MIN_ATTACK_DAMAGE") == 0) config->MIN_ATTACK_DAMAGE = value;
                 else {
                     fprintf(stderr, "Unexpected integer key: %s\n", key);
                 }
@@ -103,6 +114,7 @@ int load_config(const char *filename, Config *config) {
                 else if (strcmp(key, "MILITARY_GROUP_ATTACK_RATE") == 0) config->MILITARY_GROUP_ATTACK_RATE = value;
                 else if (strcmp(key, "CIVILIAN_GROUP_ATTACK_RATE") == 0) config->CIVILIAN_GROUP_ATTACK_RATE = value;
                 else if (strcmp(key, "RATIO_SPY") == 0) config->RATIO_SPY = value;
+
                 else {
                     fprintf(stderr, "Unexpected float key: %s\n", key);
                 }

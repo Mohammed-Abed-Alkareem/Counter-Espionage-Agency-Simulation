@@ -28,6 +28,7 @@ typedef struct {
     int MAX_INJURED_MEMBERS;
     int AGENCY_INACTIVITY_LIMIT;
     int CIVILIAN_NUMBER;
+    
 
     // New parameters
     float RATE_KEEP_ARRESTING_RELEASING;
@@ -43,7 +44,11 @@ typedef struct {
     int RESISTANCE_GROUP_INITIAL;
     int MAX_HEALTH;
     int MIN_HEALTH;
-
+    int MIN_CONTACT_TIME;
+    int MAX_CONTACT_TIME;
+    
+    int MAX_ATTACK_DAMAGE;
+    int MIN_ATTACK_DAMAGE;
 } Config;
 
 

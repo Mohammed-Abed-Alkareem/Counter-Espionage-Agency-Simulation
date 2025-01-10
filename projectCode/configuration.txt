@@ -39,6 +39,19 @@ MIN_HEALTH=70
 # max health of a resistance member
 MAX_HEALTH=100
 
+# Maximum time (seconds) for contact or communication
+MAX_CONTACT_TIME=300
+
+# Minimum time (seconds) for contact or communication
+MIN_CONTACT_TIME=30
+
+# Min Damage can a member take per attack
+MIN_DAMAGE=10
+
+#MAX_DAMAGE can a member take per attack
+MAX_DAMAGE=30
+
+
 #________________________________
 #----Agency member parameters-----
 #________________________________

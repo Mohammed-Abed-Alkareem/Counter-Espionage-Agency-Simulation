@@ -7,7 +7,6 @@
 #include <signal.h>
 #include <sys/wait.h>   
 #include <string.h>
-#include "config.h"
 #include <time.h>
 #include <string.h>
 #include <sys/types.h>
@@ -27,6 +26,8 @@
 
 #include "message_queue.h"
 #include "utils.h"
+#include "config.h"
+
 
 
 
@@ -37,13 +38,14 @@ typedef enum {
     CAPTURED,
     ESCAPED,
     KILLED,
-    LightINJURED,
+    LIGHTINJURED,
     SERIOUSLYINJURED,
     DEAD,
     SPY,
     INVISTIGATED,
-    ARREST,
-    ALIVE
+    ARRESTED,
+    ALIVE, 
+    ATTACKED
 } STATE;
 
 
@@ -63,9 +65,8 @@ typedef struct  {
     long type;
     int group_id;
     int member_num;
-    int people_process_num;
     int people_number; // like ID
-    int num_of_sec_communcated_with;
+    int contact_time;
 } PeopleContactReportMessage; // report message from people to resistance group for agency to know
 
 typedef struct  {

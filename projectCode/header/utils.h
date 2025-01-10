@@ -15,7 +15,9 @@ typedef enum {
     BLUE,
     MAGENTA,
     CYAN,
-    WHITE
+    WHITE,
+    ORANGE,
+    LIGHTRED
 } Color;
 
 void print_color(const char * , Color);
