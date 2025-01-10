@@ -72,7 +72,7 @@ typedef struct  {
 typedef struct  {
     long type; // The group ID
     int member_num;
-    int state; // e.g., killed, severely injured, lightly injured
+    STATE state; // e.g., killed, severely injured, lightly injured
 } ResistanceMemberStateReportMessage; // report message from resistance group of his state to agency;
 
 

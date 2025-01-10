@@ -1,4 +1,5 @@
 #include "resistance_group.h"
+#include <errno.h>
 
 //--Globals--
 int NUM_OF_MEMBERS = 0;
@@ -6,6 +7,13 @@ int NUM_OF_EXISTING_MEMBERS = 0;
 int spy_exist = 0;
 
 RESISTANCE_MEMBER *MEMBERS = NULL;
+
+typedef struct {
+    STATE new_state;
+    int is_read;
+} new_message_update;
+
+new_message_update * agency_update_state_arr;
 
 Config CONFIG;
 
@@ -126,6 +134,10 @@ void handle_attack (RESISTANCE_MEMBER *member){
 
 
 void being_attacked (RESISTANCE_MEMBER * member ){
+        // inform the agency of the happeing attack as soon as it happend
+        member->status = ATTACKED ;
+        regural_report_update(member);
+    
         if (member->is_spy){
             member->health -= CONFIG.MIN_ATTACK_DAMAGE;
         }else {
@@ -157,12 +169,60 @@ void being_attacked (RESISTANCE_MEMBER * member ){
 }
 
 
+void regural_report_update(RESISTANCE_MEMBER *member){
+    
+    ResistanceMemberStateReportMessage report_message;
+    report_message.member_num= member->id;
+    report_message.state = member->status ;
+    report_message.type = member->group_id ;
+
+    // Send the message to the agency
+    if (msgsnd(msg_regular_report_id, &report_message, sizeof(ResistanceMemberStateReportMessage), 0) == -1) {
+        perror("Error sending regular report message to agency");
+    }
+
+    char console_message[200];
+    sprintf(console_message, "Member %d sent regular report to agency\n", member->id);
+    print_color(console_message, BLUE);
+}
+
+
+void read_update_state_from_agency (RESISTANCE_MEMBER * member){
+
+    if(agency_update_state_arr[member->id].is_read==0){
+        member->status = agency_update_state_arr[member->id].new_state;
+        agency_update_state_arr[member->id].is_read=1;
+        return;
+    }
+
+    AgencyToResistanceStateMessage update_message;
+    if (msgrcv(msg_agency_to_resistance_group_id, &update_message, sizeof(AgencyToResistanceStateMessage), member->group_id, IPC_NOWAIT) != -1) {
+        // Check if the message is for the member
+        if (update_message.member_number == member->id) {
+            member->status = update_message.state;
+            char console_message[200];
+            sprintf(console_message, "Member %d status updated by agency to %d\n", member->id, member->status);
+            print_color(console_message, GREEN);
+        }else {
+            agency_update_state_arr[update_message.member_number].new_state = update_message.state;
+            agency_update_state_arr[update_message.member_number].is_read=0;
+        }
+    }
+
+}
+
+
+
+
+
+// end of new function 
+
 void cleanUp() {
     // Clean up code here when the process is terminated
 
     // Free the memory allocated for the members
     free(MEMBERS);
-
+    free(agency_update_state_arr);
     printf("Resistance group process terminated\n");
 }
 
@@ -176,20 +236,19 @@ void *member_function(void *arg) {
     // Infinite loop to simulate the member's life
     // while (1) {
 
-        // 
-
+        
         switch (member->status) {
             case ALIVE:
-            
+            regural_report_update(member);
             // send contac message to people and report it to agency 
             if (random_float(0, 1) < CONFIG.PEOPLE_INTERACTION_RATE)    
                 send_contact_message(member);
             wait_random_time_ms(1000 , 5000);
 
 
+            handle_attack(member);
+            wait_random_time_ms(30,10000);
 
-            // Member is alive, perform regular duties
-            printf("Member %d is alive and performing duties\n", member->id);
             break;
 
             case ARRESTED:
@@ -203,26 +262,22 @@ void *member_function(void *arg) {
             break;
 
             case SERIOUSLYINJURED:
+
             // Member is injured, handle injury scenario
             printf("Member %d is injured\n", member->id);
             break;
 
             case LIGHTINJURED:
+                regural_report_update(member);
+                handle_attack(member);
+                send_contact_message(member);
             break;
 
-            case DEAD:
-
-            break;
 
             case ESCAPED:
             // Member has escaped, handle escape scenario
 
             break;
-
-            case SPY:
-
-            break;
-
             case INVISTIGATED:
 
             break;
@@ -236,8 +291,8 @@ void *member_function(void *arg) {
             print_color(console_message, RED);
             break;
 
-        // Wait for a random amount of time
-        wait_random_time(CONFIG.RESISTANCE_MEMBER_MIN, CONFIG.RESISTANCE_MEMBER_MAX);
+
+
 
         // Check if the member is alive
         if (member->status == ALIVE) {
@@ -264,6 +319,7 @@ void *member_function(void *arg) {
     // }
 
     return NULL;
+    }
 }
 
 
@@ -283,6 +339,16 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // creating array of state update by the agency to resistance group for each member with flag as read or not 
+    agency_update_state_arr = (new_message_update *)malloc(NUM_OF_MEMBERS * sizeof(new_message_update));
+    if (agency_update_state_arr == NULL) {
+        printf("Memory allocation for state updates failed\n");
+        return 1;
+    }
+    for (int i = 0; i < NUM_OF_MEMBERS; i++) {
+        
+        agency_update_state_arr[i].is_read = 1;
+    }
 
     // get env for message queue keys
     char *key_str_regular_report = getenv("RESISTANCE_GROUP_TO_PEOPLE_KEY");
