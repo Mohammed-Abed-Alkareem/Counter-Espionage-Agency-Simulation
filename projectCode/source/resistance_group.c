@@ -141,19 +141,19 @@ void being_attacked (RESISTANCE_MEMBER * member ){
         if (member->is_spy){
             member->health -= CONFIG.MIN_ATTACK_DAMAGE;
         }else {
-            member->health -= random_integer(CONFIG.MIN_ATTACK_DAMAGE, CONFIG.MAX_ATTACK_DAMAGE);
+            if ( random_float(0,1)  > CONFIG.KILL_PROBABILITY)
+                member->health -= random_integer(CONFIG.MIN_ATTACK_DAMAGE, CONFIG.MAX_ATTACK_DAMAGE);
+            else {
+                member->health-= CONFIG.MAX_HEALTH;
+            }
         }
         
          // perform the attack
         if (member->health <= 0) {
             member->status = KILLED;
-            NUM_OF_EXISTING_MEMBERS--;
-            if (member->is_spy) {
-            spy_exist--;
-            }
-            char console_message[200];
-            sprintf(console_message, "Member %d was killed in an attack\n", member->id);
-            print_color(console_message, RED);
+
+
+
         } else if (member->health < CONFIG.MIN_HEALTH) {
             member->status = SERIOUSLYINJURED;
             char console_message[200];
@@ -165,6 +165,11 @@ void being_attacked (RESISTANCE_MEMBER * member ){
             sprintf(console_message, "Member %d was lightly injured in an attack\n", member->id);
             print_color(console_message, YELLOW);
         }
+
+        if (random_float(0,1) < CONFIG.CAPTURE_PROBABILITY){
+            member->status = CAPTURED;
+        }
+
         return;
 }
 
@@ -212,6 +217,25 @@ void read_update_state_from_agency (RESISTANCE_MEMBER * member){
 }
 
 
+void recover_from_injury(RESISTANCE_MEMBER *member) {
+    if (member->status == LIGHTINJURED) {
+        member->health += random_integer((int)(CONFIG.RECOVERY_RATE*CONFIG.MIN_HEALTH),(int) (CONFIG.RECOVERY_RATE*member->health + CONFIG.MIN_HEALTH/10));
+        if (member->health >= CONFIG.MAX_HEALTH) {
+            member->status = ALIVE;
+            char console_message[200];
+            sprintf(console_message, "Member %d has recovered from light injury\n", member->id);
+            print_color(console_message, GREEN);
+        }
+    } else if (member->status == SERIOUSLYINJURED) {
+        member->health += random_integer((int)(CONFIG.RECOVERY_RATE*CONFIG.MIN_HEALTH/100),(int) (CONFIG.RECOVERY_RATE*member->health + CONFIG.MIN_HEALTH/100));
+        if (member->health >= CONFIG.MIN_HEALTH) {
+            member->status = ALIVE;
+            char console_message[200];
+            sprintf(console_message, "Member %d has recovered from serious injury and it become light injuer\n", member->id);
+            print_color(console_message, GREEN);
+        }
+    }
+}
 
 
 
@@ -234,8 +258,7 @@ void *member_function(void *arg) {
     printf("Member %d created\n", member->id);
 
     // Infinite loop to simulate the member's life
-    // while (1) {
-
+    while (1) {
         
         switch (member->status) {
             case ALIVE:
@@ -244,83 +267,61 @@ void *member_function(void *arg) {
             if (random_float(0, 1) < CONFIG.PEOPLE_INTERACTION_RATE)    
                 send_contact_message(member);
             wait_random_time_ms(1000 , 5000);
-
-
             handle_attack(member);
             wait_random_time_ms(30,10000);
-
             break;
-
             case ARRESTED:
-            // Member is arrested, handle arrest scenario
-            printf("Member %d is arrested\n", member->id);
-            // Perform actions related to arrest
+                read_update_state_from_agency(member);
             break;
             case CAPTURED:
-            // Member is captured, handle capture scenario  
-            
+            // when captured it countously being attacked and recoverd .....
+            recover_from_injury(member);
+            being_attacked(member);
+            if (member->status != KILLED)
+                if(random_integer(0,10) < 1 )
+                    member->status = ESCAPED;
             break;
-
-            case SERIOUSLYINJURED:
-
-            // Member is injured, handle injury scenario
-            printf("Member %d is injured\n", member->id);
-            break;
-
             case LIGHTINJURED:
+            case SERIOUSLYINJURED:
                 regural_report_update(member);
+                
                 handle_attack(member);
+                
                 send_contact_message(member);
+                
+                recover_from_injury(member);
+                
             break;
-
-
             case ESCAPED:
-            // Member has escaped, handle escape scenario
-
+                regural_report_update(member);
+                if(member->health < CONFIG.MIN_HEALTH )
+                    member->status = SERIOUSLYINJURED;
+                else 
+                    member->status = LIGHTINJURED;
             break;
             case INVISTIGATED:
-
-            break;
-
-            case ATTACKED:
-
+                read_update_state_from_agency(member);
             break;
             case KILLED:
             
-            sprintf(console_message, "Member %d is killed From group %d\n", member->id, member->group_id);
+            sprintf(console_message, "Member %d is killed From group %d in attack\n", member->id, member->group_id);
             print_color(console_message, RED);
+            // exit the thread
+            NUM_OF_EXISTING_MEMBERS--;
+            if (member->is_spy) {
+                spy_exist--;
+            }
+            return NULL;
+
             break;
 
 
-
-
-        // Check if the member is alive
-        if (member->status == ALIVE) {
-            // Print the member's health
-            printf("Member %d health: %d\n", member->id, member->health);
-
-            // Check if the member's health is below 50
-            if (member->health < 50) {
-                // Print a message that the member is injured
-                printf("Member %d is injured\n", member->id);
-            }
-
-            // Check if the member's health is below 0
-            if (member->health <= 0) {
-                // Print a message that the member is dead
-                printf("Member %d is dead\n", member->id);
-                member->status = KILLED;
-                NUM_OF_EXISTING_MEMBERS--;
-                if (member->is_spy) {
-                    spy_exist--;
-                }
-            }
         }
-    // }
+    }
 
     return NULL;
-    }
 }
+
 
 
 int main(int argc, char *argv[]) {

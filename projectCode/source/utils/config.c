@@ -114,6 +114,7 @@ int load_config(const char *filename, Config *config) {
                 else if (strcmp(key, "MILITARY_GROUP_ATTACK_RATE") == 0) config->MILITARY_GROUP_ATTACK_RATE = value;
                 else if (strcmp(key, "CIVILIAN_GROUP_ATTACK_RATE") == 0) config->CIVILIAN_GROUP_ATTACK_RATE = value;
                 else if (strcmp(key, "RATIO_SPY") == 0) config->RATIO_SPY = value;
+                
 
                 else {
                     fprintf(stderr, "Unexpected float key: %s\n", key);
