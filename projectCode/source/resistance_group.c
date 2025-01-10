@@ -82,7 +82,9 @@ void handle_attack (RESISTANCE_MEMBER *member){
         // Member is targeted by the enemy
         member_attack = -1;
         pthread_mutex_unlock(&member_attack_mutex);
-
+        // inform the agency of the happeing attack as soon as it happend
+        member->status = ATTACKED ;
+        regural_report_update(member);
         being_attacked(member);
         return;
 
@@ -93,6 +95,10 @@ void handle_attack (RESISTANCE_MEMBER *member){
     pthread_mutex_lock(&general_attack_mutex);
     if (general_attack) {
         pthread_mutex_unlock(&general_attack_mutex);
+        
+        // inform the agency of the happeing attack as soon as it happend
+        member->status = ATTACKED ;
+        regural_report_update(member);
         being_attacked(member);
         pthread_mutex_lock(&general_attack_counter_mutex);
         general_attack_counter++;
@@ -134,9 +140,7 @@ void handle_attack (RESISTANCE_MEMBER *member){
 
 
 void being_attacked (RESISTANCE_MEMBER * member ){
-        // inform the agency of the happeing attack as soon as it happend
-        member->status = ATTACKED ;
-        regural_report_update(member);
+
     
         if (member->is_spy){
             member->health -= CONFIG.MIN_ATTACK_DAMAGE;
@@ -247,6 +251,9 @@ void cleanUp() {
     // Free the memory allocated for the members
     free(MEMBERS);
     free(agency_update_state_arr);
+    pthread_mutex_destroy(&general_attack_mutex);
+    pthread_mutex_destroy(&general_attack_counter_mutex);
+    pthread_mutex_destroy(&member_attack_mutex);
     printf("Resistance group process terminated\n");
 }
 
@@ -467,11 +474,6 @@ int main(int argc, char *argv[]) {
                 MEMBERS[i].status = ALIVE;
             }
         }
-
-
-
-
-
     }
 
     return 0;

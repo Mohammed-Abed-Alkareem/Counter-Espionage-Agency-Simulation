@@ -127,6 +127,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
+
+
+
     // Get the key to send message to enemy about the target probability
     char *key_str = getenv("AGENCY_TO_ENEMY_TARGET_PROBABILITY_KEY");
     if (key_str == NULL) {
