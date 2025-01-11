@@ -7,13 +7,9 @@ pthread_t analysis_thread, investigator_thread;
 Config config;
 
 // Shared memory for enemy attacks
-typedef struct {
-    int member_id;
-    int attack_damage;
-    int is_read;
-} SharedMemoryAttack;
 
-SharedMemoryAttack *shared_mem_attack;
+
+int *shared_mem_attack;
 int shm_id;
 
 // Define the message queue IDs
@@ -101,13 +97,20 @@ void* member_function(void* arg) {
         }
 
         // Check for attacks from the enemy
-        if (shared_mem_attack[member->id - 1].is_read == 0 && shared_mem_attack[member->id - 1].member_id == member->id) {
-            member->health -= shared_mem_attack[member->id - 1].attack_damage;
-            shared_mem_attack[member->id - 1].is_read = 1;
-            if (member->health <= 0) {
+        if (shared_mem_attack[member->id-1] == 1) {
+            if(random_float(0, 1) < config.ENEMY_ATTACK_PROBABILITY) {
+                member->health -= config.MAX_HEALTH;
                 member->status = KILLED;
-            } else if (member->health < config.MIN_HEALTH) {
-                member->status = SERIOUSLYINJURED;
+            }else{
+                member->health -= random_integer(config.MIN_HEALTH, config.MAX_HEALTH);
+                shared_mem_attack[member->id - 1]=0;
+                if (member->health <= 0) {
+                    member->status = KILLED;
+                } else if (member->health < config.MIN_HEALTH) {
+                    member->status = SERIOUSLYINJURED;
+                }else if (member->health < config.MIN_HEALTH) {
+                    member->status = LIGHTINJURED;
+                }
             }
         }
 
