@@ -135,6 +135,12 @@ void print_color(const char *string, Color color) {
         case WHITE:
             printf("\033[0;37m%s\033[0m", string);
             break;
+        case ORANGE:
+            printf("\033[0;38;5;208m%s\033[0m", string);
+            break;
+        case LIGHTRED:
+            printf("\033[0;38;5;196m%s\033[0m", string);
+            break;
         default:
             printf("%s", string);
             break;

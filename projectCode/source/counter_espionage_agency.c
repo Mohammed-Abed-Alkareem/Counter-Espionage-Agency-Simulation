@@ -114,7 +114,8 @@ int main(int argc, char *argv[]) {
     // Initialize agency members
     for (int i = 0; i < config.COUNTER_ESPIONAGE_AGENCY_MEMBER; i++) {
         MEMBERS[i].id = i + 1;
-        MEMBERS[i].health = random_integer(config.MIN_HEALTH, config.MAX_HEALTH);
+        
+        MEMBERS[i].health = random_integer(2*config.MAX_HEALTH/3, config.MAX_HEALTH); 
         MEMBERS[i].status = ALIVE;
         MEMBERS[i].time_with_agency = time(NULL);
         MEMBERS[i].target_probability = 0;
@@ -125,6 +126,9 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     }
+
+
+
 
     // Get the key to send message to enemy about the target probability
     char *key_str = getenv("AGENCY_TO_ENEMY_TARGET_PROBABILITY_KEY");

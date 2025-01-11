@@ -7,7 +7,6 @@
 #include <signal.h>
 #include <sys/wait.h>   
 #include <string.h>
-#include "config.h"
 #include <time.h>
 #include <string.h>
 #include <sys/types.h>
@@ -27,6 +26,27 @@
 
 #include "message_queue.h"
 #include "utils.h"
+#include "config.h"
+
+
+
+
+//state 
+typedef enum {
+    ACTIVE,
+    INACTIVE,
+    CAPTURED,
+    ESCAPED,
+    KILLED,
+    LIGHTINJURED,
+    SERIOUSLYINJURED,
+    DEAD,
+    SPY,
+    INVISTIGATED,
+    ARRESTED,
+    ALIVE, 
+    ATTACKED
+} STATE;
 
 
 typedef struct {
@@ -45,15 +65,14 @@ typedef struct  {
     long type;
     int group_id;
     int member_num;
-    int people_process_num;
     int people_number; // like ID
-    int num_of_sec_communcated_with;
+    int contact_time;
 } PeopleContactReportMessage; // report message from people to resistance group for agency to know
 
 typedef struct  {
     long type; // The group ID
     int member_num;
-    int state; // e.g., killed, severely injured, lightly injured
+    STATE state; // e.g., killed, severely injured, lightly injured
 } ResistanceMemberStateReportMessage; // report message from resistance group of his state to agency;
 
 
@@ -65,7 +84,7 @@ typedef struct  {
 typedef struct  {
     long type; // The group number
     int member_number;
-    int state; // e.g., arrested, killed, caught, released
+    STATE state; // e.g., arrested, killed, caught, released
     int time_sent;
 } AgencyToResistanceStateMessage ;
 
@@ -114,16 +133,7 @@ typedef enum {
 } MEMBER_TYPE;
 
 
-
-//enum
-typedef  enum {
-    KILLED,
-    INJURED,
-    CAPTURED,
-    ALIVE
-} STATUS;
-
-
+typedef STATE STATUS;
 
 //create a struct
 typedef struct {
