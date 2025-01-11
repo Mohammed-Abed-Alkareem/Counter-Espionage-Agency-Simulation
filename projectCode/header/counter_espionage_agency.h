@@ -2,7 +2,7 @@
 #define COUNTER_ESPIONAGE_AGENCY_H
 
 #include "common.h"
-
+#include "shared_memory.h"
 
 int main(int argc, char *argv[]);
 void* member_function(void* arg);
