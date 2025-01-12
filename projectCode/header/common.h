@@ -94,6 +94,9 @@ typedef struct  {
     int group_id; // Specific attack on a member
     int group_type; // e.g., military, civilian
     int group_member; // Specific attack on a member
+    int num_of_sec; // Number of seconds communicated
+    int enroll_data; // Enrolment data
+    int isCounterAttack; // to differentiate between the counter espionage and the resistance group attack
 }SpyToEnemyReportMessage; // report message from spy to enemy
 
 
@@ -121,6 +124,7 @@ typedef struct {
     long type; // Represents the people ID
     int member_id; // Member ID
     int num_of_sec; // Number of seconds communicated
+    int enroll_data; // Enrollment data
 } AgencyMemberToPeopleContactMessage; // agency member to people contact message structure
 
 

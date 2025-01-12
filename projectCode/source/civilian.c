@@ -22,8 +22,15 @@ void handle_contact_messages() {
         // Send the message to the enemy if the civilian is a spy
         if (is_spy) {
             // Send the message to the enemy
-            contact_message_from_resistance_group.type = random_integer(1, config.ENEMY_NUMBER);
-            if (msgsnd(msg_people_to_enemy_id, &contact_message_from_resistance_group, sizeof(ResistanceMemberToPeopleContactMessage), 0) == -1) {
+            SpyToEnemyReportMessage report_message;
+            report_message.type = random_integer(1, config.ENEMY_NUMBER);
+            report_message.group_id = contact_message_from_resistance_group.group_id;
+            report_message.group_type = contact_message_from_resistance_group.group_type;
+            report_message.group_member = contact_message_from_resistance_group.member_id;
+            report_message.num_of_sec = contact_message_from_resistance_group.num_of_sec;
+            report_message.enroll_data = 0;//not used here
+            report_message.isCounterAttack = 0;//to attack the resistance group
+            if (msgsnd(msg_people_to_enemy_id, &report_message, sizeof(SpyToEnemyReportMessage), 0) == -1) {
                 perror("Error sending message to enemy");
             }
             
@@ -39,8 +46,15 @@ void handle_contact_messages() {
                contact_message_from_agency.member_id, contact_message_from_agency.num_of_sec);
         if (is_spy) {
             // Send the message to the enemy
-            contact_message_from_agency.type = random_integer(1, config.ENEMY_NUMBER) + config.ENEMY_NUMBER;
-            if (msgsnd(msg_people_to_enemy_id, &contact_message_from_agency, sizeof(AgencyMemberToPeopleContactMessage), 0) == -1) {
+            SpyToEnemyReportMessage report_message;
+            report_message.type = random_integer(1, config.ENEMY_NUMBER);
+            report_message.group_id = contact_message_from_agency.group_id;
+            report_message.group_type = contact_message_from_agency.group_type;
+            report_message.group_member = contact_message_from_agency.member_id;
+            report_message.num_of_sec = contact_message_from_agency.num_of_sec;
+            report_message.enroll_data = contact_message_from_agency.enroll_data;
+            report_message.isCounterAttack = 1;//to attack the agency
+            if (msgsnd(msg_people_to_enemy_id, &report_message, sizeof(SpyToEnemyReportMessage), 0) == -1) {
                 perror("Error sending message to enemy");
             }
         }
