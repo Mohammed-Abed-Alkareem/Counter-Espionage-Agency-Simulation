@@ -1,7 +1,6 @@
 /*
 How to use : 
 
-
 typedef struct {
     int value;
     float target_probability;
@@ -10,7 +9,7 @@ typedef struct {
 void* create_my_node() {
     MyNode* node = (MyNode*)malloc(sizeof(MyNode));
     node->value = 0;
-    node-> target_probability = 0.0;
+    node->target_probability = 0.0;
     return node;
 }
 
@@ -42,11 +41,17 @@ typedef struct Node {
     void* member_id;
     void* group_id;
     void* data;
+    struct Node* next_member;
 } Node;
 
+typedef struct GroupNode {
+    void* group_id;
+    Node* members;
+    struct GroupNode* next_group;
+} GroupNode;
+
 struct HashTable {
-    Node** member_id_index;
-    Node** group_id_index;
+    GroupNode** group_id_index;
     size_t member_id_size;
     size_t group_id_size;
     CreateNodeFunc create_node;
@@ -70,48 +75,62 @@ HashTable* create_hash_table(CreateNodeFunc create_node, DeleteNodeFunc delete_n
     table->group_id_size = group_id_size;
     table->create_node = create_node;
     table->delete_node = delete_node;
-    table->member_id_index = (Node**)calloc(table->capacity, sizeof(Node*));
-    table->group_id_index = (Node**)calloc(table->capacity, sizeof(Node*));
+    table->group_id_index = (GroupNode**)calloc(table->capacity, sizeof(GroupNode*));
     return table;
 }
 
 void delete_hash_table(HashTable* table) {
     for (size_t i = 0; i < table->capacity; ++i) {
-        if (table->member_id_index[i]) {
-            table->delete_node(table->member_id_index[i]->data);
-            free(table->member_id_index[i]->member_id);
-            free(table->member_id_index[i]->group_id);
-            free(table->member_id_index[i]);
+        GroupNode* group_node = table->group_id_index[i];
+        while (group_node) {
+            Node* member_node = group_node->members;
+            while (member_node) {
+                Node* temp_member = member_node;
+                member_node = member_node->next_member;
+                table->delete_node(temp_member->data);
+                free(temp_member->member_id);
+                free(temp_member);
+            }
+            GroupNode* temp_group = group_node;
+            group_node = group_node->next_group;
+            free(temp_group->group_id);
+            free(temp_group);
         }
     }
-    free(table->member_id_index);
     free(table->group_id_index);
     free(table);
 }
 
 void* get_or_create_node(HashTable* table, const void* member_id, const void* group_id) {
-    size_t member_hash = hash_function(member_id, table->member_id_size, table->capacity);
     size_t group_hash = hash_function(group_id, table->group_id_size, table->capacity);
 
-    Node* node = table->member_id_index[member_hash];
-    if (node && memcmp(node->member_id, member_id, table->member_id_size) == 0) {
-        return node->data;
+    GroupNode* group_node = table->group_id_index[group_hash];
+    while (group_node && memcmp(group_node->group_id, group_id, table->group_id_size) != 0) {
+        group_node = group_node->next_group;
     }
 
-    node = table->group_id_index[group_hash];
-    if (node && memcmp(node->group_id, group_id, table->group_id_size) == 0) {
-        return node->data;
+    if (!group_node) {
+        group_node = (GroupNode*)malloc(sizeof(GroupNode));
+        group_node->group_id = malloc(table->group_id_size);
+        memcpy(group_node->group_id, group_id, table->group_id_size);
+        group_node->members = NULL;
+        group_node->next_group = table->group_id_index[group_hash];
+        table->group_id_index[group_hash] = group_node;
     }
 
-    node = (Node*)malloc(sizeof(Node));
-    node->member_id = malloc(table->member_id_size);
-    node->group_id = malloc(table->group_id_size);
-    memcpy(node->member_id, member_id, table->member_id_size);
-    memcpy(node->group_id, group_id, table->group_id_size);
-    node->data = table->create_node();
+    Node* member_node = group_node->members;
+    while (member_node && memcmp(member_node->member_id, member_id, table->member_id_size) != 0) {
+        member_node = member_node->next_member;
+    }
 
-    table->member_id_index[member_hash] = node;
-    table->group_id_index[group_hash] = node;
+    if (!member_node) {
+        member_node = (Node*)malloc(sizeof(Node));
+        member_node->member_id = malloc(table->member_id_size);
+        memcpy(member_node->member_id, member_id, table->member_id_size);
+        member_node->data = table->create_node();
+        member_node->next_member = group_node->members;
+        group_node->members = member_node;
+    }
 
-    return node->data;
+    return member_node->data;
 }
