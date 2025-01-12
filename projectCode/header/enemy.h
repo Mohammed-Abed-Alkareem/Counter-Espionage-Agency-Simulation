@@ -5,7 +5,7 @@
 #define ENEMY_H
 
 #include "common.h"
-
+#include "shared_memory.h"
 int main(int argc, char *argv[]);
 
 

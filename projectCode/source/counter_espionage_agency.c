@@ -1,14 +1,45 @@
 #include "counter_espionage_agency.h"
-
+#include "two_way_hash_index.h"
 // Global variables
 AGENCY_MEMBER *MEMBERS;
 pthread_mutex_t agency_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_t analysis_thread, investigator_thread;
 Config config;
 
+// Shared memory for enemy attacks
+int *shared_mem_attack;
+int shm_id;
+
+
+
+// define two way hash for People info , resistance member info 
+HashTable *people_info_hash;
+HashTable *resistance_member_info_hash;
+
+
+//define the node of people info hash node . 
+typedef struct {
+    int id;
+    int health;
+    STATUS status;
+    float spy_probability;
+    
+} PeopleInfoNode;
+
+// Define the message queue IDs
+int msg_agency_to_people_id;
+int msg_agency_to_resistance_group_id;
+int enemy_to_agency_attack_id;
+int resistance_group_to_agency_id;
+
 // Clean-up function called at exit
 void cleanUp() {
     free(MEMBERS);
+    // remove the shared memory >> this should be done by the main process...
+    // keep the detach only
+    shmdt(shared_mem_attack);
+    shmctl(shm_id, IPC_RMID, NULL);
+
     printf("Counter espionage agency process terminated\n");
 }
 
@@ -31,6 +62,7 @@ void analyze_reports() {
 
 // Function to replace a killed or captured member
 void replace_member(int index) {
+    wait_random_time_ms(1000, 10000); // Wait for random time before replacing member
     MEMBERS[index].id = index + 1;
     MEMBERS[index].health = random_integer(50, 100); // Example health range
     MEMBERS[index].status = ALIVE;
@@ -44,34 +76,94 @@ void replace_member(int index) {
     }
 }
 
-void update_enrollment_time_target_probability(AGENCY_MEMBER *member) {
-    member->time_with_agency = time(NULL) - member->time_with_agency;
-    // Update the target probability related to the time with the agency, ensuring it stays between 0 and 1
-    float value = log(member->time_with_agency + 1) * random_float(0.1, 0.5);
-    member->target_probability = 1.0 / (1.0 + exp(-value));//sigmoid function
-    printf("Member %d target probability: %f\n", member->id, member->target_probability);
-}
-
 // Function to simulate agency member behavior
 void* member_function(void* arg) {
     AGENCY_MEMBER *member = (AGENCY_MEMBER *)arg;
-
+    char console_message[200];
     while (1) {
         sleep(1); // Simulate member activity interval
 
         pthread_mutex_lock(&agency_lock);
-        if (member->status == KILLED || member->status == CAPTURED || member->status == INJURED) {
-            // Replace the member
-            replace_member(member->id - 1);
-            pthread_mutex_unlock(&agency_lock);
-            pthread_exit(NULL);
+        switch (member->status) {
+            case ALIVE:
+                // Perform actions for alive members
+                send_contact_message(member);
+                read_message_from_resistance_group(member);
+                handle_attack(member);
+                break;
+            case SERIOUSLYINJURED:
+                // Perform actions for injured members
+                recover_from_injury(member);
+                handle_attack(member);
+                break;
+            case LIGHTINJURED:
+                // Perform actions for injured members
+                recover_from_injury(member);
+                handle_attack(member);
+                break;
+            case CAPTURED:
+                //
+                break;
+            case KILLED:
+                // Perform actions for killed members
+                replace_member(member->id - 1);
+                sprintf(console_message, "Member from Counter Espoinage Agency %d has been Killed\n", member->id);
+                print_color(console_message, RED);
+                break;
+            // Add more states as needed
+            default:
+                break;
         }
-        update_enrollment_time_target_probability(member);
+
+        // Check for attacks from the enemy
+        if (shared_mem_attack[member->id-1] == 1) {
+            if(random_float(0, 1) < config.ENEMY_ATTACK_PROBABILITY) {
+                member->health -= config.MAX_HEALTH;
+                member->status = KILLED;
+            }else{
+                member->health -= random_integer(config.MIN_HEALTH, config.MAX_HEALTH);
+                shared_mem_attack[member->id - 1]=0;
+                if (member->health <= 0) {
+                    member->status = KILLED;
+                } else if (member->health < config.MIN_HEALTH) {
+                    member->status = SERIOUSLYINJURED;
+                }else if (member->health < config.MIN_HEALTH) {
+                    member->status = LIGHTINJURED;
+                }
+            }
+        }
 
         pthread_mutex_unlock(&agency_lock);
     }
 
     return NULL;
+}
+
+// Function to handle recovery from injury
+void recover_from_injury(AGENCY_MEMBER *member) { //! seperate the recovery rate for light and serious injury
+    if (member->status == LIGHTINJURED || member->status == SERIOUSLYINJURED) {
+        member->health += random_integer((int)(config.RECOVERY_RATE * config.MIN_HEALTH), (int)(config.RECOVERY_RATE * member->health + config.MIN_HEALTH / 10));
+        if (member->health >= config.MAX_HEALTH) {
+            member->status = ALIVE;
+            printf("Member %d has recovered from injury\n", member->id);
+        }
+    }
+}
+
+// Function to handle capture
+void handle_capture(AGENCY_MEMBER *member) {
+    // Implement capture logic here
+}
+
+// Function to handle death
+void handle_death(AGENCY_MEMBER *member) {
+    printf("Member %d is killed\n", member->id);
+    // Implement additional death logic here
+}
+
+// Function to handle attacks
+void handle_attack(AGENCY_MEMBER *member) {
+    // Implement attack handling logic here
 }
 
 // Function to investigate and arrest suspicious members
@@ -85,6 +177,20 @@ void* investigator_function(void* arg) {
     }
 
     return NULL;
+}
+
+// Function to send contact message to people and agency
+void send_contact_message(AGENCY_MEMBER *member) {
+    // Send communication message to people and send the communication report to the agency
+    AgencyMemberToPeopleContactMessage contact_message;
+    contact_message.type = config.CIVILIAN_NUMBER + random_integer(1, config.CIVILIAN_NUMBER);
+    contact_message.num_of_sec = random_integer(config.MIN_CONTACT_TIME, config.MAX_CONTACT_TIME);
+    contact_message.member_id = member->id;
+
+    // Send the message to the people
+    if (msgsnd(msg_agency_to_people_id, &contact_message, sizeof(AgencyMemberToPeopleContactMessage), 0) == -1) {
+        perror("Error sending message to people");
+    }
 }
 
 // Main function
@@ -104,18 +210,81 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+
+    // creating and initializing the shared memory in the main process
     // Allocate memory for agency members
     MEMBERS = (AGENCY_MEMBER *)malloc(config.COUNTER_ESPIONAGE_AGENCY_MEMBER * sizeof(AGENCY_MEMBER));
     if (MEMBERS == NULL) {
         perror("Memory allocation failed");
         exit(1);
     }
+    // create a key and set it in the environment variable
+    // Initialize shared memory for enemy attacks
+    shm_id = shmget(IPC_PRIVATE, config.COUNTER_ESPIONAGE_AGENCY_MEMBER * sizeof(int), IPC_CREAT | 0666);
+    if (shm_id == -1) {
+        perror("Shared memory creation failed");
+        exit(1);
+    }
+    
+    shared_mem_attack = (int *)shmat(shm_id, NULL, 0);
+    if (shared_mem_attack == (void *)-1) {
+        perror("Shared memory attachment failed");
+        exit(1);
+    }
+    for (int i = 0; i < config.COUNTER_ESPIONAGE_AGENCY_MEMBER; i++) {
+        shared_mem_attack[i] = 1;
+    }
+
+
+
+
+
+
+
+    // Get the message queue IDs from environment variables
+    char *key_str_agency_to_people = getenv("AGENCY_TO_PEOPLE_STATE_KEY");
+    if (key_str_agency_to_people == NULL) {
+        perror("Error getting environment variable");
+        exit(1);
+    }
+    msg_agency_to_people_id = atoi(key_str_agency_to_people);
+
+    char *key_str_agency_to_resistance = getenv("AGENCY_TO_RESISTANCE_MEMBER_STATE_KEY");
+    if (key_str_agency_to_resistance == NULL) {
+        perror("Error getting environment variable");
+        exit(1);
+    }
+    msg_agency_to_resistance_group_id = atoi(key_str_agency_to_resistance);
+
+    char *key_str_enemy_to_agency = getenv("ENEMY_TO_AGENCY_ATTACK_KEY");
+    if (key_str_enemy_to_agency == NULL) {
+        perror("Error getting environment variable");
+        exit(1);
+    }
+    enemy_to_agency_attack_id = atoi(key_str_enemy_to_agency);
+
+    char *key_str_resistance_to_agency = getenv("RESISTANCE_TO_AGENCY_MEMBER_STATE_REPORT_KEY");
+    if (key_str_resistance_to_agency == NULL) {
+        perror("Error getting environment variable");
+        exit(1);
+    }
+    resistance_group_to_agency_id = atoi(key_str_resistance_to_agency);
+
+
+
+
+    // get the message queue id 
+    msg_agency_to_people_id = create_message_queue(msg_agency_to_people_id);
+    msg_agency_to_resistance_group_id = create_message_queue(msg_agency_to_resistance_group_id);
+    enemy_to_agency_attack_id = create_message_queue(enemy_to_agency_attack_id);
+    resistance_group_to_agency_id = create_message_queue(resistance_group_to_agency_id);
+    
+
 
     // Initialize agency members
     for (int i = 0; i < config.COUNTER_ESPIONAGE_AGENCY_MEMBER; i++) {
         MEMBERS[i].id = i + 1;
-        
-        MEMBERS[i].health = random_integer(2*config.MAX_HEALTH/3, config.MAX_HEALTH); 
+        MEMBERS[i].health = config.MAX_HEALTH;
         MEMBERS[i].status = ALIVE;
         MEMBERS[i].time_with_agency = time(NULL);
         MEMBERS[i].target_probability = 0;
@@ -127,9 +296,12 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // wait for the threads to finish
+    for (int i = 0; i < config.COUNTER_ESPIONAGE_AGENCY_MEMBER; i++) {
+        pthread_join(MEMBERS[i].thread_id, NULL);
+    }
 
-
-
+    //! this is not needed but leave it for now (targert probability)
     // Get the key to send message to enemy about the target probability
     char *key_str = getenv("AGENCY_TO_ENEMY_TARGET_PROBABILITY_KEY");
     if (key_str == NULL) {

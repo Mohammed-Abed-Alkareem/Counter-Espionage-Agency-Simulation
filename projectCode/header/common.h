@@ -98,17 +98,14 @@ typedef struct  {
 
 
 typedef struct  {
-    long type; // Group number
+    long type; // Group number for resistance group and agency member number for agency member
     int member_id; // For specific attack
     int attack_type; // e.g., target, kill, definite kill
     int isGeneral; // For general attack
     int time_sent;
 } EnemyToResistanceGroupAttackMessage ;
 
-typedef struct  {
-    int type; // Represents the member ID
-    // int attack_type; // e.g., target, kill, definite kill
-}EnemyToAgencyAttackMessage ; // enemy to agency attack message structure
+typedef EnemyToResistanceGroupAttackMessage EnemyToAgencyAttackMessage ; // enemy to agency attack message structure
 
 
 typedef struct  {
@@ -118,6 +115,15 @@ typedef struct  {
     int group_type ; // e.g., military, civilian
     int member_id; // Member ID
 }ResistanceMemberToPeopleContactMessage ; // resistance group member contac with people message structure 
+
+
+typedef struct {
+    long type; // Represents the people ID
+    int member_id; // Member ID
+    int num_of_sec; // Number of seconds communicated
+} AgencyMemberToPeopleContactMessage; // agency member to people contact message structure
+
+
 
 typedef struct  {
     int member_id; // Represents the people ID
