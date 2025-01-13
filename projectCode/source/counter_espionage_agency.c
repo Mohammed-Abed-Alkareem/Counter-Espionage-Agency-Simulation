@@ -79,6 +79,7 @@ void *create_people_info_node(){
     if (node == NULL) {
         return NULL;
     }
+
     node->id = -1;
     node->state = ACTIVE;
     node->spy_probability = 0.0;
@@ -722,7 +723,7 @@ int main(int argc, char *argv[]) {
     // Create a shared semaphore for shared data
         // Create a shared semaphore for shared data
     sem_ter_cond = sem_open("/termination_cond_sem", O_CREAT, 0644, 1);
-    if (sem == SEM_FAILED) {
+    if (sem_ter_cond == SEM_FAILED) {
     perror("sem_open failed");
     exit(EXIT_FAILURE);
 }
@@ -761,7 +762,8 @@ int main(int argc, char *argv[]) {
     }
     // create a key and set it in the environment variable
     // Initialize shared memory for enemy attacks
-    shm_id = shmget(IPC_PRIVATE, config.COUNTER_ESPIONAGE_AGENCY_MEMBER * sizeof(int), IPC_CREAT | 0666);
+    key_t shm_key = key_generator('Z');
+    shm_id = shmget(shm_key, config.COUNTER_ESPIONAGE_AGENCY_MEMBER * sizeof(int), IPC_CREAT | 0666);
     if (shm_id == -1) {
         perror("Shared memory creation failed");
         exit(1);

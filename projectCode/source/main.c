@@ -7,7 +7,7 @@ pid_t counter_espionage_agency_pid;
 pid_t civilian_pid, enemy_pid;
 
 pthread_t thread_fork_resistance_group;
-
+int attack_shm_id_to_agency;
 int resistance_group_counter = 0;
 
 SharedData *shared_data;
@@ -48,6 +48,14 @@ int main(int argc, char *argv[]) {
     }
  
 // ============shared memories==================
+
+
+    key_t shm_key = key_generator('Z');
+    attack_shm_id_to_agency = shmget(shm_key, config.COUNTER_ESPIONAGE_AGENCY_MEMBER * sizeof(int), IPC_CREAT | 0666);
+    if (attack_shm_id_to_agency == -1) {
+        perror("Shared memory creation failed");
+        exit(1);
+    }
 
     // Shared memory for data
     shm_data_key = key_generator('A');
@@ -291,6 +299,7 @@ for (int i = 0; i < config.CIVILIAN_NUMBER; i++) {
 
 void cleanup() {
     if (shm_data_id != -1) shmctl(shm_data_id, IPC_RMID, NULL);
+    if (attack_shm_id_to_agency != -1) shmctl(attack_shm_id_to_agency, IPC_RMID, NULL);
     if (msg_resistance_agency_id != -1) msgctl(msg_resistance_agency_id, IPC_RMID, NULL);
 
     free(resistance_group_pid);
