@@ -46,10 +46,10 @@ MAX_CONTACT_TIME=300
 MIN_CONTACT_TIME=30
 
 # Min Damage can a member take per attack
-MIN_DAMAGE=10
+MIN_ATTACK_DAMAGE=10
 
 #MAX_DAMAGE can a member take per attack
-MAX_DAMAGE=30
+MAX_ATTACK_DAMAGE=30
 
 
 #________________________________

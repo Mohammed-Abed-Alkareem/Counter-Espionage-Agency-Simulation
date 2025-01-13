@@ -395,37 +395,37 @@ int main(int argc, char *argv[]) {
     }
 
     // get env for message queue keys
-    char *key_str_regular_report = getenv("RESISTANCE_GROUP_TO_PEOPLE_KEY");
+    char *key_str_regular_report = getenv("RESISTANCE_TO_PEOPLE_CONTACT_KEY");
     if (key_str_regular_report == NULL) {
-        perror("Error getting environment variable");
+        perror("Error getting environment variable RESISTANCE_TO_PEOPLE_CONTACT_KEY");
         return 1;
     }   
     msg_resistance_group_to_people_id = atoi(key_str_regular_report);
 
-    char *key_str_communication_report = getenv("RESISTANCE_GROUP_TO_AGENCY_COMMUNICATION_REPORT_KEY");
+    char *key_str_communication_report = getenv("RESISTANCE_TO_AGENCY_PEOPLE_CONTACT_REPORT_KEY");
     if (key_str_communication_report == NULL) {
-        perror("Error getting environment variable");
+        perror("Error getting environment variable RESISTANCE_TO_AGENCY_PEOPLE_CONTACT_REPORT_KEY");
         return 1;
     }   
     msg_resistance_group_to_agency_communication_report_id = atoi(key_str_communication_report);
 
     char *spy_to_enemy_report_key_str = getenv("SPY_TO_ENEMY_REPORT_KEY");
     if (spy_to_enemy_report_key_str == NULL) {
-        perror("Error getting environment variable");
+        perror("Error getting environment variable SPY_TO_ENEMY_REPORT_KEY");
         return 1;
     }
     msg_resistance_group_to_enemy_id = atoi(spy_to_enemy_report_key_str);
 
-    char *key_str_enemy_to_resistance = getenv("ENEMY_TO_RESISTANCE_GROUP_KEY");
+    char *key_str_enemy_to_resistance = getenv("ENEMY_TO_RESISTANCE_GROUP_ATTACK_KEY");
     if (key_str_enemy_to_resistance == NULL) {
-        perror("Error getting environment variable");
+        perror("Error getting environment variable ENEMY_TO_RESISTANCE_GROUP_ATTACK_KEY");
         return 1;
     }
     msg_enemy_to_resistance_group_id = atoi(key_str_enemy_to_resistance);
 
-    char *key_str_agency_to_resistance = getenv("AGENCY_TO_RESISTANCE_GROUP_KEY");
+    char *key_str_agency_to_resistance = getenv("AGENCY_TO_RESISTANCE_MEMBER_STATE_KEY");
     if (key_str_agency_to_resistance == NULL) {
-        perror("Error getting environment variable");
+        perror("Error getting environment variable AGENCY_TO_RESISTANCE_MEMBER_STATE_KEY");
         return 1;
     }
     msg_agency_to_resistance_group_id = atoi(key_str_agency_to_resistance);

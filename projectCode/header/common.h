@@ -50,11 +50,21 @@ typedef enum {
 
 
 typedef struct {
-    // Shared data
+    // Already existing fields:
     int number_killed_members;
     int number_injured_members;
     int number_captured_members;
 
+    // Add an agency inactivity time (if you want to track that):
+    float agency_inactivity_time;
+
+    // For the “boxes”:
+    // Let’s assume up to 32 groups, each can have up to 10 members.
+    // If group i is not used, set group_active[i] = 0.
+    int  group_active[32];          // 1 if group is active, 0 if not.
+    int  group_member_count[32];    // How many members in this group.
+    int  group_member_killed[32][10]; // For each member in group i, is it killed? (1 = yes, 0 = no)
+    // You could store more advanced info like x,y positions, etc., if you want dynamic positions.
 } SharedData;
 
 //********************* */
@@ -79,6 +89,7 @@ typedef struct  {
 typedef struct  {
     long type; // The people number
     int state; // e.g., arrested, killed, caught, released
+    int member_id;
 } AgencyToPeopleStateMessage; // from agency to people to know their state
 
 typedef struct  {
@@ -130,6 +141,8 @@ typedef struct {
     int member_id; // Member ID
     int num_of_sec; // Number of seconds communicated
     int enroll_date; // Enrolment date
+    int group_id;
+    int group_type;
 
 } AgencyMemberToPeopleContactMessage; // agency member to people contact message structure
 

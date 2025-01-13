@@ -34,12 +34,13 @@ void handle_contact_messages() {
             if (msgsnd(msg_people_to_enemy_id, &report_message, sizeof(SpyToEnemyReportMessage), 0) == -1) {
                 perror("Error sending message to enemy");
             }
-            
+
         }
-    } else {
-        // No message received, continue processing
-        printf("No message received from resistance groups\n");
     }
+//    else {
+//        // No message received, continue processing
+//        printf("No message received from resistance groups\n");
+//    }
     // Non-blocking check for messages from the agency members (contact with people)
     AgencyMemberToPeopleContactMessage contact_message_from_agency;
     if (msgrcv(msg_agency_to_people_id, &contact_message_from_agency, sizeof(AgencyMemberToPeopleContactMessage), 0, IPC_NOWAIT) != -1) {
@@ -59,20 +60,22 @@ void handle_contact_messages() {
                 perror("Error sending message to enemy");
             }
         }
-    } else {
-        // No message received, continue processing
-        printf("No message received from agency members\n");
     }
+//    else {
+//        // No message received, continue processing
+//        printf("No message received from agency members\n");
+//    }
     // Non-blocking check for messages from the agency members (State)
     AgencyToPeopleStateMessage state_message_from_agency;
     if (msgrcv(msg_agency_to_people_state_id, &state_message_from_agency, sizeof(AgencyToPeopleStateMessage), 0, IPC_NOWAIT) != -1) {
         printf("Received state message from agency member %d, state %d\n",
                state_message_from_agency.member_id, state_message_from_agency.state);
 
-    } else {
-        // No message received, continue processing
-        printf("No message received from agency members\n");
     }
+//    else {
+//        // No message received, continue processing
+//        printf("No message received from agency members\n");
+//    }
 
 
 }
@@ -103,7 +106,7 @@ int main(int argc, char *argv[]) {
     // Get the message queue keys from environment variables
     char *key_str_resistance_group_to_people = getenv("RESISTANCE_TO_PEOPLE_CONTACT_KEY");
     if (key_str_resistance_group_to_people == NULL) {
-        perror("Error getting environment variable");
+        perror("Error getting environment variable RESISTANCE_TO_PEOPLE_CONTACT_KEY");
         exit(1);
     }
     msg_resistance_group_to_people_id = atoi(key_str_resistance_group_to_people);
@@ -112,7 +115,7 @@ int main(int argc, char *argv[]) {
     if (is_spy){
         char *key_str_people_to_enemy = getenv("CIVILIAN_TO_ENEMY_REPORT_KEY");
         if (key_str_people_to_enemy == NULL) {
-            perror("Error getting environment variable");
+            perror("Error getting environment variable CIVILIAN_TO_ENEMY_REPORT_KEY");
             exit(1);
         }
         msg_people_to_enemy_id = atoi(key_str_people_to_enemy);
@@ -120,7 +123,7 @@ int main(int argc, char *argv[]) {
 
     char *key_str_agency_to_people = getenv("AGENCY_TO_CIVILIAN_CONTACT_REPORT_KEY");
     if (key_str_agency_to_people == NULL) {
-        perror("Error getting environment variable");
+        perror("Error getting environment variable AGENCY_TO_CIVILIAN_CONTACT_REPORT_KEY");
         exit(1);
     }
     msg_agency_to_people_id = atoi(key_str_agency_to_people);
@@ -129,12 +132,12 @@ int main(int argc, char *argv[]) {
 
     char *key_str_agency_to_people_state = getenv("AGENCY_TO_PEOPLE_STATE_KEY");
     if (key_str_agency_to_people_state == NULL) {
-        perror("Error getting environment variable");
+        perror("Error getting environment variable AGENCY_TO_PEOPLE_STATE_KEY");
         exit(1);
     }
     msg_agency_to_people_state_id = atoi(key_str_agency_to_people_state);
     msg_agency_to_people_state_id = msgget(msg_agency_to_people_state_id, 0666 | IPC_CREAT);
-    
+
 
     printf("Civilian process created\n");
 
@@ -143,7 +146,7 @@ int main(int argc, char *argv[]) {
     {
         handle_contact_messages();
     }
-    
+
 
     return 0;
 }

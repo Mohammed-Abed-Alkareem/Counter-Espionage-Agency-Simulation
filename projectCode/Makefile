@@ -1,7 +1,7 @@
 # Compiler and flags
 CC = gcc
 CFLAGS = -Wall -Wextra -Iheader -pthread -lrt
-LDFLAGS = -pthread -lrt -lm
+LDFLAGS = -pthread -lrt -lm -lGL -lGLU -lglut
 
 # Directories
 SRC_DIR = source

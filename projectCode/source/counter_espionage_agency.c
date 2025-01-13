@@ -10,7 +10,8 @@ int shm_id;
 sem_t *sem_ter_cond;
 int sem_data_id = -1;
 SharedData *shared_data;
-
+int msg_agency_to_people_id;
+int msg_agency_to_resistance_group_id;
 /*
     * define the hash table for the people info and resistance member info
     * define the node for people and resistance member 
@@ -268,7 +269,7 @@ void read_message_from_resistance_group(AGENCY_MEMBER *member){
         switch (message.state)
         {
         case KILLED:
-            pthread_mutex_lcock(&member_info->lock);
+            pthread_mutex_lock(&member_info->lock);
             member_info->state = DEAD;
             pthread_mutex_unlock(&member_info->lock);
             analyze_contact_recored(member_info);
@@ -789,28 +790,28 @@ int main(int argc, char *argv[]) {
     // Get the message queue IDs from environment variables
     char *key_str_agency_to_people = getenv("AGENCY_TO_PEOPLE_STATE_KEY");
     if (key_str_agency_to_people == NULL) {
-        perror("Error getting environment variable");
+        perror("Error getting environment variable AGENCY_TO_PEOPLE_STATE_KEY");
         exit(1);
     }
     msg_agency_to_people_id = atoi(key_str_agency_to_people);
 
     char *key_str_agency_to_resistance = getenv("AGENCY_TO_RESISTANCE_MEMBER_STATE_KEY");
     if (key_str_agency_to_resistance == NULL) {
-        perror("Error getting environment variable");
+        perror("Error getting environment variable AGENCY_TO_RESISTANCE_MEMBER_STATE_KEY");
         exit(1);
     }
     msg_agency_to_resistance_group_id = atoi(key_str_agency_to_resistance);
 
     char *key_str_enemy_to_agency = getenv("ENEMY_TO_AGENCY_ATTACK_KEY");
     if (key_str_enemy_to_agency == NULL) {
-        perror("Error getting environment variable");
+        perror("Error getting environment variable ENEMY_TO_AGENCY_ATTACK_KEY");
         exit(1);
     }
     enemy_to_agency_attack_id = atoi(key_str_enemy_to_agency);
 
     char *key_str_resistance_to_agency = getenv("RESISTANCE_TO_AGENCY_MEMBER_STATE_REPORT_KEY");
     if (key_str_resistance_to_agency == NULL) {
-        perror("Error getting environment variable");
+        perror("Error getting environment variable RESISTANCE_TO_AGENCY_MEMBER_STATE_REPORT_KEY");
         exit(1);
     }
     resistance_group_to_agency_id = atoi(key_str_resistance_to_agency);
@@ -851,7 +852,7 @@ int main(int argc, char *argv[]) {
     // Get the key to send message to enemy about the target probability
     char *key_str = getenv("AGENCY_TO_ENEMY_TARGET_PROBABILITY_KEY");
     if (key_str == NULL) {
-        perror("Error getting environment variable");
+        perror("Error getting environment variable AGENCY_TO_ENEMY_TARGET_PROBABILITY_KEY");
         exit(1);
     }
     key_t key_target_prob = atoi(key_str);
