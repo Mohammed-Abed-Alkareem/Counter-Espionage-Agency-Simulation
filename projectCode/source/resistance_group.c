@@ -243,6 +243,32 @@ void recover_from_injury(RESISTANCE_MEMBER *member) {
 
 
 
+// spy send the report to the enemy
+void send_report_to_enemy(RESISTANCE_MEMBER *member){
+    // send the report to the enemy
+    SpyToEnemyReportMessage report_message;
+    report_message.group_member = -1;
+    report_message.group_id = member->group_id;
+    report_message.type = 0 ;
+    report_message.group_type = member->type;
+    report_message.enroll_date = member->enroll_date;
+    report_message.process_id = getpid();
+    report_message.isCounterAttack = 0;
+
+    // Send the message to the enemy
+    if (msgsnd(msg_resistance_group_to_enemy_id, &report_message, sizeof(SpyToEnemyReportMessage), 0) == -1) {
+        perror("Error sending message to enemy");
+    }
+
+    char console_message[200];
+    sprintf(console_message, "Spy member %d sent report to enemy\n", member->id);
+    print_color(console_message, YELLOW);
+}
+
+
+
+
+
 // end of new function 
 
 void cleanUp() {
@@ -269,6 +295,7 @@ void *member_function(void *arg) {
         
         switch (member->status) {
             case ALIVE:
+            case ACTIVE:
             regural_report_update(member);
             // send contac message to people and report it to agency 
             if (random_float(0, 1) < CONFIG.PEOPLE_INTERACTION_RATE)    
@@ -276,6 +303,10 @@ void *member_function(void *arg) {
             wait_random_time_ms(1000 , 5000);
             handle_attack(member);
             wait_random_time_ms(30,10000);
+            if (member->is_spy){
+                if (random_float(0, 1) < CONFIG.FULL_GROUP_KILLED_PROBABILITY)    
+                    send_report_to_enemy(member);
+            }
             break;
             case ARRESTED:
                 read_update_state_from_agency(member);
@@ -287,6 +318,10 @@ void *member_function(void *arg) {
             if (member->status != KILLED)
                 if(random_integer(0,10) < 1 )
                     member->status = ESCAPED;
+                else
+                {
+                    member->status = CAPTURED;
+                }
             break;
             case LIGHTINJURED:
             case SERIOUSLYINJURED:
@@ -310,7 +345,7 @@ void *member_function(void *arg) {
                 read_update_state_from_agency(member);
             break;
             case KILLED:
-            
+            regural_report_update(member);
             sprintf(console_message, "Member %d is killed From group %d in attack\n", member->id, member->group_id);
             print_color(console_message, RED);
             // exit the thread
@@ -373,12 +408,12 @@ int main(int argc, char *argv[]) {
     }   
     msg_resistance_group_to_agency_communication_report_id = atoi(key_str_communication_report);
 
-    char *key_str_enemy = getenv("RESISTANCE_GROUP_TO_ENEMY_KEY");
-    if (key_str_enemy == NULL) {
+    char *spy_to_enemy_report_key_str = getenv("SPY_TO_ENEMY_REPORT_KEY");
+    if (spy_to_enemy_report_key_str == NULL) {
         perror("Error getting environment variable");
         return 1;
     }
-    msg_resistance_group_to_enemy_id = atoi(key_str_enemy);
+    msg_resistance_group_to_enemy_id = atoi(spy_to_enemy_report_key_str);
 
     char *key_str_enemy_to_resistance = getenv("ENEMY_TO_RESISTANCE_GROUP_KEY");
     if (key_str_enemy_to_resistance == NULL) {
@@ -393,6 +428,15 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     msg_agency_to_resistance_group_id = atoi(key_str_agency_to_resistance);
+    
+
+    // get the message queue id 
+    msg_regular_report_id = create_message_queue(msg_regular_report_id);
+    msg_resistance_group_to_people_id = create_message_queue(msg_resistance_group_to_people_id);
+    msg_resistance_group_to_agency_communication_report_id = create_message_queue(msg_resistance_group_to_agency_communication_report_id);
+    msg_resistance_group_to_enemy_id = create_message_queue(msg_resistance_group_to_enemy_id);
+    msg_enemy_to_resistance_group_id = create_message_queue(msg_enemy_to_resistance_group_id);
+    msg_agency_to_resistance_group_id = create_message_queue(msg_agency_to_resistance_group_id);
 
 
 
@@ -428,6 +472,7 @@ int main(int argc, char *argv[]) {
             spy_exist++;
         }
         MEMBERS[i].group_id = group_id;//get the group id from the command line
+        MEMBERS[i].enroll_date = time(NULL);
     }
     
     printf("Resistance group process created %d\n", group_id);
@@ -462,6 +507,7 @@ int main(int argc, char *argv[]) {
                 if (MEMBERS[i].is_spy) {
                     spy_exist++;
                 }
+                MEMBERS[i].enroll_date = time(NULL);
 
 
                 pthread_create(&MEMBERS[i].thread_id, NULL, member_function, (void *)&MEMBERS[i]);

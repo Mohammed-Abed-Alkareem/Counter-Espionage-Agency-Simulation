@@ -28,7 +28,7 @@ typedef struct {
     int MAX_INJURED_MEMBERS;
     int AGENCY_INACTIVITY_LIMIT;
     int CIVILIAN_NUMBER;
-    
+    int ENEMY_NUMBER;
 
     // New parameters
     float RATE_KEEP_ARRESTING_RELEASING;

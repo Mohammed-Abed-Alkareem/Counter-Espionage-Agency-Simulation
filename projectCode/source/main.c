@@ -22,7 +22,7 @@ Config config;
 key_t shm_data_key; // Shared memory key between all processes to share data
 
 // --- Message queues ---
-int msg_queue_ids[9]; // Message queue ids
+int msg_queue_ids[10]; // Message queue ids
 
 // ------IPC ids------
 int shm_data_id = -1;
@@ -95,6 +95,12 @@ int main(int argc, char *argv[]) {
     key_t agency_to_enemy_target_probability_key = key_generator('J');
     // attack message from enemy to counter espionage agency 
     key_t enemy_to_agency_attack_key = key_generator('K');
+    // message from the civilian (spy) to the enemy about the resistance group
+    key_t civilian_to_enemy_report_key = key_generator('L');
+    // message from the agency to the civilian (contact report)
+    key_t agency_to_civilian_contact_report_key = key_generator('M');
+
+
     
 
 
@@ -111,6 +117,8 @@ int main(int argc, char *argv[]) {
     msg_queue_ids[6] =  create_message_queue(resistance_to_people_contact_key);
     msg_queue_ids[7] =  create_message_queue(agency_to_enemy_target_probability_key);
     msg_queue_ids[8] =  create_message_queue(enemy_to_agency_attack_key);
+    msg_queue_ids[9] =  create_message_queue(civilian_to_enemy_report_key);
+    msg_queue_ids[10] =  create_message_queue(agency_to_civilian_contact_report_key);
 
 
     // ============converting keys to string==================
@@ -131,6 +139,8 @@ int main(int argc, char *argv[]) {
     char resistance_to_people_contact_key_str[20];
     char agency_to_enemy_target_probability_key_str[20];
     char enemy_to_agency_attack_key_str[20];
+    char civilian_to_enemy_report_key_str[20];
+    char agency_to_civilian_contact_report_key_str[20];
 
     snprintf(resistance_to_agency_people_contact_report_key_str, sizeof(resistance_to_agency_people_contact_report_key_str), "%d", resistance_to_agency_people_contact_report_key);
     snprintf(resisitance_to_agency_member_state_report_key_str, sizeof(resisitance_to_agency_member_state_report_key_str), "%d", resisitance_to_agency_member_state_report_key);
@@ -141,6 +151,8 @@ int main(int argc, char *argv[]) {
     snprintf(resistance_to_people_contact_key_str, sizeof(resistance_to_people_contact_key_str), "%d", resistance_to_people_contact_key);
     snprintf(agency_to_enemy_target_probability_key_str, sizeof(agency_to_enemy_target_probability_key_str), "%d", agency_to_enemy_target_probability_key);
     snprintf(enemy_to_agency_attack_key_str, sizeof(enemy_to_agency_attack_key_str), "%d", enemy_to_agency_attack_key);
+    snprintf(civilian_to_enemy_report_key_str, sizeof(civilian_to_enemy_report_key_str), "%d", civilian_to_enemy_report_key);
+    snprintf(agency_to_civilian_contact_report_key_str, sizeof(agency_to_civilian_contact_report_key_str), "%d", agency_to_civilian_contact_report_key);
 
     setenv("RESISTANCE_TO_AGENCY_PEOPLE_CONTACT_REPORT_KEY", resistance_to_agency_people_contact_report_key_str, 1);
     setenv("RESISTANCE_TO_AGENCY_MEMBER_STATE_REPORT_KEY", resisitance_to_agency_member_state_report_key_str, 1);
@@ -151,6 +163,8 @@ int main(int argc, char *argv[]) {
     setenv("RESISTANCE_TO_PEOPLE_CONTACT_KEY", resistance_to_people_contact_key_str, 1);
     setenv("AGENCY_TO_ENEMY_TARGET_PROBABILITY_KEY", agency_to_enemy_target_probability_key_str, 1);
     setenv("ENEMY_TO_AGENCY_ATTACK_KEY", enemy_to_agency_attack_key_str, 1);
+    setenv("CIVILIAN_TO_ENEMY_REPORT_KEY", civilian_to_enemy_report_key_str, 1);
+    setenv("AGENCY_TO_CIVILIAN_CONTACT_REPORT_KEY", agency_to_civilian_contact_report_key_str, 1);
 
 
 
@@ -166,19 +180,32 @@ int main(int argc, char *argv[]) {
     }
     
     //  Fork civilians
-   if (civilian_pid = fork() == 0) {
-        execl("./bin/civilian", "civilian", argv[1], NULL);
-        // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/civilian", "civilian", argv[1], NULL);
+for (int i = 0; i < config.CIVILIAN_NUMBER; i++) {
+    if ((civilian_pid = fork()) == 0) {
+        int is_spy = propability_choice(config.SPY_PROBABILITY);
+        char is_spy_str[20];
+        snprintf(is_spy_str, sizeof(is_spy_str), "%d", is_spy);
+        int civilian_id = i + 1;
+        char civilian_id_str[20];
+        snprintf(civilian_id_str, sizeof(civilian_id_str), "%d", civilian_id);
+        execl("./bin/civilian", "civilian", argv[1], is_spy_str, civilian_id_str, NULL);
+        // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/civilian", "civilian", argv[1], is_spy_str, civilian_id_str, NULL);
         perror("Civilian process failed");
         exit(1);
     }
+}
 
     //fork enemy
-    if (enemy_pid = fork() == 0) {
-        execl("./bin/enemy", "enemy", argv[1], NULL);
-        // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/enemy", "enemy", argv[1], NULL);
-        perror("Enemy process failed");
-        exit(1);
+   for (int i = 0; i < config.ENEMY_NUMBER; i++) {
+        if ((enemy_pid = fork()) == 0) {
+            int enemy_id = i + 1;
+            char enemy_id_str[20];
+            snprintf(enemy_id_str, sizeof(enemy_id_str), "%d", enemy_id);
+            execl("./bin/enemy", "enemy", argv[1], enemy_id_str, NULL);
+            // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/enemy", "enemy", argv[1], enemy_id_str, NULL);
+            perror("Enemy process failed");
+            exit(1);
+        }
     }
 
 
@@ -208,9 +235,12 @@ int main(int argc, char *argv[]) {
     //make a thread for creating resistance group every specified interval
     
 
-    pthread_create(&thread_fork_resistance_group, NULL ,fork_resistance_group, (void *)argv[1]);
-
+    // pthread_create(&thread_fork_resistance_group, NULL ,fork_resistance_group, (void *)argv[1]);
     
+    // use sigalarm to create resistance group every specified interval
+    signal(SIGALRM, fork_resistance_group);
+    alarm(config.RESISTANCE_GROUP_CREATION_INTERVAL);
+
     while (1) {
         // check for exit conditions
         if (shared_data->number_killed_members >= config.MAX_KILLED_MEMBERS) {
@@ -264,7 +294,8 @@ void cleanup() {
 }
 
 // Fork resistance group every specified interval using sleep
-void* fork_resistance_group(void *arg) {
+void fork_resistance_group(int signal) {
+    if ()
     char *argv = (char *)arg;
     printf("Fork resistance group thread created\n");    
     char resistance_group_id_str[20];
