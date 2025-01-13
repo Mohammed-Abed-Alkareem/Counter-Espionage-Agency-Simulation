@@ -6,7 +6,8 @@ int msg_resistance_group_to_people_id = -1;
 int msg_people_to_enemy_id = -1;
 int is_spy = 0;
 int civilian_id = 0;
-
+int msg_agency_to_people_id;
+int msg_agency_to_people_state_id;
 // Function to clean up the process
 void cleanUp() {
     printf("Civilian process terminated\n");
@@ -28,7 +29,7 @@ void handle_contact_messages() {
             report_message.group_type = contact_message_from_resistance_group.group_type;
             report_message.group_member = contact_message_from_resistance_group.member_id;
             report_message.num_of_sec = contact_message_from_resistance_group.num_of_sec;
-            report_message.enroll_date = 0;//not used here
+            report_message.enroll_data = 0;//not used here
             report_message.isCounterAttack = 0;//to attack the resistance group
             if (msgsnd(msg_people_to_enemy_id, &report_message, sizeof(SpyToEnemyReportMessage), 0) == -1) {
                 perror("Error sending message to enemy");
@@ -52,7 +53,7 @@ void handle_contact_messages() {
             report_message.group_type = contact_message_from_agency.group_type;
             report_message.group_member = contact_message_from_agency.member_id;
             report_message.num_of_sec = contact_message_from_agency.num_of_sec;
-            report_message.enroll_date = contact_message_from_agency.enroll_date;
+            report_message.enroll_data = contact_message_from_agency.enroll_date;
             report_message.isCounterAttack = 1;//to attack the agency
             if (msgsnd(msg_people_to_enemy_id, &report_message, sizeof(SpyToEnemyReportMessage), 0) == -1) {
                 perror("Error sending message to enemy");
@@ -122,15 +123,18 @@ int main(int argc, char *argv[]) {
         perror("Error getting environment variable");
         exit(1);
     }
-    int msg_agency_to_people_id = atoi(key_str_agency_to_people);
+    msg_agency_to_people_id = atoi(key_str_agency_to_people);
+    msg_agency_to_people_id = msgget(msg_agency_to_people_id, 0666 | IPC_CREAT);
+
 
     char *key_str_agency_to_people_state = getenv("AGENCY_TO_PEOPLE_STATE_KEY");
     if (key_str_agency_to_people_state == NULL) {
         perror("Error getting environment variable");
         exit(1);
     }
-    int msg_agency_to_people_state_id = atoi(key_str_agency_to_people_state);
-
+    msg_agency_to_people_state_id = atoi(key_str_agency_to_people_state);
+    msg_agency_to_people_state_id = msgget(msg_agency_to_people_state_id, 0666 | IPC_CREAT);
+    
 
     printf("Civilian process created\n");
 
