@@ -31,16 +31,17 @@ void handle_contact_messages() {
             report_message.num_of_sec = contact_message_from_resistance_group.num_of_sec;
             report_message.enroll_data = 0;//not used here
             report_message.isCounterAttack = 0;//to attack the resistance group
-            if (msgsnd(msg_people_to_enemy_id, &report_message, sizeof(SpyToEnemyReportMessage), 0) == -1) {
+            if (msgsnd(msg_people_to_enemy_id, &report_message, sizeof(SpyToEnemyReportMessage), IPC_NOWAIT) == -1) {
                 perror("Error sending message to enemy");
             }
-            
+            print_color("message sent", RED);
         }
-    } else {
-        // No message received, continue processing
-        printf("No message received from resistance groups\n");
-    }
-    // Non-blocking check for messages from the agency members (contact with people)
+    } 
+    // else {
+    //     // No message received, continue processing
+    //     printf("No message received from resistance groups\n");
+    // }
+    // // Non-blocking check for messages from the agency members (contact with people)
     AgencyMemberToPeopleContactMessage contact_message_from_agency;
     if (msgrcv(msg_agency_to_people_id, &contact_message_from_agency, sizeof(AgencyMemberToPeopleContactMessage), 0, IPC_NOWAIT) != -1) {
         printf("Received contact message from agency member %d, contact time %d seconds\n",
@@ -49,8 +50,6 @@ void handle_contact_messages() {
             // Send the message to the enemy
             SpyToEnemyReportMessage report_message;
             report_message.type = random_integer(1, config.ENEMY_NUMBER);
-            report_message.group_id = contact_message_from_agency.group_id;
-            report_message.group_type = contact_message_from_agency.group_type;
             report_message.group_member = contact_message_from_agency.member_id;
             report_message.num_of_sec = contact_message_from_agency.num_of_sec;
             report_message.enroll_data = contact_message_from_agency.enroll_date;
@@ -59,20 +58,22 @@ void handle_contact_messages() {
                 perror("Error sending message to enemy");
             }
         }
-    } else {
-        // No message received, continue processing
-        printf("No message received from agency members\n");
-    }
+    } 
+    // else {
+    //     // No message received, continue processing
+    //     printf("No message received from agency members\n");
+    // }
     // Non-blocking check for messages from the agency members (State)
     AgencyToPeopleStateMessage state_message_from_agency;
     if (msgrcv(msg_agency_to_people_state_id, &state_message_from_agency, sizeof(AgencyToPeopleStateMessage), 0, IPC_NOWAIT) != -1) {
         printf("Received state message from agency member %d, state %d\n",
-               state_message_from_agency.member_id, state_message_from_agency.state);
+               state_message_from_agency.type, state_message_from_agency.state);
 
-    } else {
-        // No message received, continue processing
-        printf("No message received from agency members\n");
-    }
+    } 
+    // else {
+    //     // No message received, continue processing
+    //     printf("No message received from agency members\n");
+    // }
 
 
 }
@@ -96,6 +97,7 @@ int main(int argc, char *argv[]) {
 
     // Determine if the civilian is a spy
     is_spy = atoi(argv[2]);
+    is_spy=1;
 
     // get the civilian ID
     civilian_id = atoi(argv[3]);

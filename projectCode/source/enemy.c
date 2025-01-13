@@ -12,89 +12,53 @@ void cleanUp() {
     printf("Enemy process terminated\n");
 }
 
-// Function to handle messages from civilians and spies
-void handle_messages() {
-    // Non-blocking check for messages from civilians
-    if (msgrcv(msg_civilian_to_enemy_id, &message_from_spy, sizeof(SpyToEnemyReportMessage), 0, IPC_NOWAIT) != -1) {
-        printf("Received contact message from civilian ");
-        handle_attacks();
+
+
+void handel_message(){
+    // Read message from the people process
+    if (msgrcv(msg_civilian_to_enemy_id, &message_from_spy, sizeof(SpyToEnemyReportMessage) - sizeof(long), 0, 0) == -1) {
+        perror("Error receiving message from civilian to enemy");
+        exit(1);
+    }else{
         
-    } else {
-        // No message received, continue processing
-        printf("No message received from civilians\n");
-    }
-    // Non-blocking check for messages from spies
-    ////////////////////////////////////////////////////////////////////////
-}
+    // Decide whether to send an attack message based on the received message
+    if (random_float(0,1)< config.ENEMY_ATTACK_PROBABILITY) {
+        EnemyToResistanceGroupAttackMessage attack_message;
+        attack_message.type = message_from_spy.group_id;
+        attack_message.member_id = message_from_spy.group_member;
+        attack_message.attack_type = 1; // Example attack type
+        attack_message.isGeneral = 0; // Specific attack
+        attack_message.time_sent = time(NULL);
 
-
-
-
-// Function to handle attacks
-void handle_attacks() {
-
-    if (message_from_spy.isCounterAttack == 0){//if the message is to attack the resistance group
-        float randomFloat = random_float(-1, 1);
-        //using sigmoid function to calculate the probability of being targeted
-        float target_probability = 1 / (1 + exp(-(randomFloat * (message_from_spy.num_of_sec + message_from_spy.enroll_data))));//sigmoid function
-        if (target_probability > config.ENEMY_ATTACK_PROBABILITY) {//if the probability is greater than the attack probability then attack
-            int is_general_attack = random_float(0, 1) < config.GENERAL_ATTACK_PROBABILITY;
-            if (is_general_attack){
-                // Perform a general attack on a resistance group
-                EnemyToResistanceGroupAttackMessage attack_message;
-                attack_message.type = message_from_spy.group_id;
-                attack_message.isGeneral = 1;
-                attack_message.time_sent = time(NULL);
-                attack_message.attack_type = random_integer(1, 3);//randomly select the attack type
-                if (msgsnd(msg_enemy_to_resistance_group_id, &attack_message, sizeof(EnemyToResistanceGroupAttackMessage), 0) == -1) {
-                    perror("Error sending general attack message");
-                }
-            } else {//if the attack is not general
-                // Target a specific member of a resistance group
-                EnemyToResistanceGroupAttackMessage attack_message;
-                attack_message.type = message_from_spy.group_id;
-                attack_message.isGeneral = 0;
-                attack_message.member_id = message_from_spy.group_member;
-                attack_message.time_sent = time(NULL);
-                if (msgsnd(msg_enemy_to_resistance_group_id, &attack_message, sizeof(EnemyToResistanceGroupAttackMessage), 0) == -1) {
-                    perror("Error sending targeted attack message");
-                }
-            }
-        }    
-            
-    } else {//if the message is to attack the agency
-        float randomFloat = random_float(-1, 1);
-        //using sigmoid function to calculate the probability of being targeted
-        float target_probability = 1 / (1 + exp(-(randomFloat * (message_from_spy.num_of_sec + message_from_spy.enroll_data))));//sigmoid function
-        if (target_probability > config.ENEMY_ATTACK_PROBABILITY) {//if the probability is greater than the attack probability then attack
-            // Perform a general attack on the agency
-            int is_general_attack = random_float(0, 1) < config.GENERAL_ATTACK_PROBABILITY;
-            if (is_general_attack){
-                // Perform a general attack on a resistance group
-                EnemyToResistanceGroupAttackMessage attack_message;
-                attack_message.type = message_from_spy.group_id;
-                attack_message.isGeneral = 1;
-                attack_message.time_sent = time(NULL);
-                attack_message.attack_type = random_integer(1, 3);//randomly select the attack type
-                if (msgsnd(msg_enemy_to_resistance_group_id, &attack_message, sizeof(EnemyToResistanceGroupAttackMessage), 0) == -1) {
-                    perror("Error sending general attack message");
-                }
-            } else {//if the attack is not general
-                // Target a specific member of a resistance group
-                EnemyToResistanceGroupAttackMessage attack_message;
-                attack_message.type = message_from_spy.group_id;
-                attack_message.isGeneral = 0;
-                attack_message.member_id = message_from_spy.group_member;
-                attack_message.time_sent = time(NULL);
-                attack_message.attack_type = random_integer(1, 3);//randomly select the attack type
-                if (msgsnd(msg_enemy_to_resistance_group_id, &attack_message, sizeof(EnemyToResistanceGroupAttackMessage), 0) == -1) {
-                    perror("Error sending targeted attack message");
-                }
-            }
+        // Send the attack message to the resistance group
+        if (msgsnd(msg_enemy_to_resistance_group_id, &attack_message, sizeof(EnemyToResistanceGroupAttackMessage) - sizeof(long), 0) == -1) {
+            perror("Error sending attack message to resistance group");
+            exit(1);
         }
-    }
-}
 
+        // printf("Sent attack message to resistance group:\n");
+        // printf("Group ID: %ld\n", attack_message.type);
+        // printf("Member ID: %d\n", attack_message.member_id);
+        // printf("Attack Type: %d\n", attack_message.attack_type);
+        // printf("Is General: %d\n", attack_message.isGeneral);
+        // printf("Time Sent: %d\n", attack_message.time_sent);
+    }
+    }
+
+
+    
+
+    // printf("Received message from spy:\n");
+    // printf("Process ID: %d\n", message_from_spy.process_id);
+    // printf("Group ID: %d\n", message_from_spy.group_id);
+    // printf("Group Type: %d\n", message_from_spy.group_type);
+    // printf("Group Member: %d\n", message_from_spy.group_member);
+    // printf("Number of Seconds: %d\n", message_from_spy.num_of_sec);
+    // printf("Enroll Data: %d\n", message_from_spy.enroll_data);
+    // printf("Is Counter Attack: %d\n", message_from_spy.isCounterAttack);
+
+
+}
 
 
 // Main function
@@ -134,7 +98,7 @@ int main(int argc, char *argv[]) {
     printf("Enemy process created\n");
 
     while (1){
-        handle_messages(); 
+        handel_message(); 
     }
 
     return 0;

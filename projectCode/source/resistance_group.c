@@ -186,13 +186,14 @@ void regural_report_update(RESISTANCE_MEMBER *member){
     report_message.type = member->group_id ;
 
     // Send the message to the agency
-    if (msgsnd(msg_regular_report_id, &report_message, sizeof(ResistanceMemberStateReportMessage), 0) == -1) {
+    if (msgsnd(msg_regular_report_id, &report_message, sizeof(ResistanceMemberStateReportMessage), IPC_NOWAIT) == -1) {
         perror("Error sending regular report message to agency");
     }
 
     char console_message[200];
     sprintf(console_message, "Member %d sent regular report to agency\n", member->id);
     print_color(console_message, BLUE);
+    wait_random_time(1,3);
 }
 
 
@@ -395,14 +396,14 @@ int main(int argc, char *argv[]) {
     }
 
     // get env for message queue keys
-    char *key_str_regular_report = getenv("RESISTANCE_GROUP_TO_PEOPLE_KEY");
+    char *key_str_regular_report = getenv("RESISTANCE_TO_PEOPLE_CONTACT_KEY");
     if (key_str_regular_report == NULL) {
         perror("Error getting environment variable");
         return 1;
     }   
     msg_resistance_group_to_people_id = atoi(key_str_regular_report);
 
-    char *key_str_communication_report = getenv("RESISTANCE_GROUP_TO_AGENCY_COMMUNICATION_REPORT_KEY");
+    char *key_str_communication_report = getenv("RESISTANCE_TO_AGENCY_PEOPLE_CONTACT_REPORT_KEY");
     if (key_str_communication_report == NULL) {
         perror("Error getting environment variable");
         return 1;
@@ -416,14 +417,14 @@ int main(int argc, char *argv[]) {
     }
     msg_resistance_group_to_enemy_id = atoi(spy_to_enemy_report_key_str);
 
-    char *key_str_enemy_to_resistance = getenv("ENEMY_TO_RESISTANCE_GROUP_KEY");
+    char *key_str_enemy_to_resistance = getenv("ENEMY_TO_RESISTANCE_GROUP_ATTACK_KEY");
     if (key_str_enemy_to_resistance == NULL) {
         perror("Error getting environment variable");
         return 1;
     }
     msg_enemy_to_resistance_group_id = atoi(key_str_enemy_to_resistance);
 
-    char *key_str_agency_to_resistance = getenv("AGENCY_TO_RESISTANCE_GROUP_KEY");
+    char *key_str_agency_to_resistance = getenv("AGENCY_TO_RESISTANCE_MEMBER_STATE_KEY");
     if (key_str_agency_to_resistance == NULL) {
         perror("Error getting environment variable");
         return 1;

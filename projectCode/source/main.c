@@ -23,7 +23,7 @@ key_t shm_data_key; // Shared memory key between all processes to share data
 
 // --- Message queues ---
 int msg_queue_ids[10]; // Message queue ids
-
+char config_file[100]; // Config file path
 // ------IPC ids------
 int shm_data_id = -1;
 int msg_resistance_agency_id = -1;
@@ -49,7 +49,8 @@ int main(int argc, char *argv[]) {
  
 // ============shared memories==================
 
-
+    // copy the config name to the config_file
+    strcpy(config_file, argv[1]);
     key_t shm_key = key_generator('Z');
     attack_shm_id_to_agency = shmget(shm_key, config.COUNTER_ESPIONAGE_AGENCY_MEMBER * sizeof(int), IPC_CREAT | 0666);
     if (attack_shm_id_to_agency == -1) {
@@ -83,21 +84,12 @@ int main(int argc, char *argv[]) {
 
     // Create a shared semaphore for shared data
     sem_ter_cond = sem_open("/termination_cond_sem", O_CREAT, 0644, 1);
-    if (sem == SEM_FAILED) {
+    if (sem_ter_cond == SEM_FAILED) {
     perror("sem_open failed");
     exit(EXIT_FAILURE);
 }
 
 
-    // Initialize the semaphore to 1 (binary semaphore)
-    if (semctl(sem_data_id, 0, SETVAL, 1) == -1) {
-        perror("Semaphore initialization failed");
-        cleanup();
-        exit(1);
-    }
-
-    // Store semaphore id in shared data
-    shared_data->sem_data_id = sem_data_id;
 
     // --- Message queues ---
     
@@ -195,14 +187,16 @@ int main(int argc, char *argv[]) {
 
 
 // ============= Forking processes ===========
-
+    counter_espionage_agency_pid = fork();
     // Fork counter espionage agency
-    if ((counter_espionage_agency_pid = fork()) == 0) {
-        execl("./bin/counter_espionage_agency", "counter_espionage_agency", argv[1], NULL);
+    if ( counter_espionage_agency_pid == 0) {
+        print_color("counterEagenci is running !!",RED);
+        fflush(stdout);
+        execl("./bin/counter_espionage_agency", "counter", config_file, NULL);
         // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/counter_espionage_agency", "counter_espionage_agency", argv[1], NULL);
         perror("Counter espionage agency process failed");
         exit(1);
-    }
+    }//counter_espionage_agency
     
     //  Fork civilians
 for (int i = 0; i < config.CIVILIAN_NUMBER; i++) {
@@ -249,7 +243,7 @@ for (int i = 0; i < config.CIVILIAN_NUMBER; i++) {
             type = propability_choice(config.MILITARY_GROUP_PROBABILITY) ? MILITARY : SOCIALIST;
             snprintf(resesistance_group_type_str, sizeof(resesistance_group_type_str), "%d", type);
             snprintf(resistance_group_id_str, sizeof(resistance_group_id_str), "%d", resistance_group_counter + 1 );
-            execl("./bin/resistance_group", "resistance_group", argv[1], resistance_group_id_str, resesistance_group_type_str, NULL);
+            execl("./bin/resistance_group", "resistance_group", config_file , resistance_group_id_str, resesistance_group_type_str, NULL);
             // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv[1], resistance_group_id_str, resesistance_group_type_str, NULL);
             perror("Resistance group process failed");
             exit(1);
@@ -263,8 +257,10 @@ for (int i = 0; i < config.CIVILIAN_NUMBER; i++) {
     // pthread_create(&thread_fork_resistance_group, NULL ,fork_resistance_group, (void *)argv[1]);
     
     // use sigalarm to create resistance group every specified interval
+    // create a resistance gorup each ranodm amount of time 
     signal(SIGALRM, fork_resistance_group);
     alarm(config.RESISTANCE_GROUP_CREATION_INTERVAL);
+
 
     while (1) {
         // check for exit conditions
@@ -324,30 +320,50 @@ void cleanup() {
 
 // Fork resistance group every specified interval using sleep
 void fork_resistance_group(int signal) {
-    if ()
-    char *argv = (char *)arg;
-    printf("Fork resistance group thread created\n");    
+
+    // printf("Fork resistance group thread created\n");
     char resistance_group_id_str[20];
-
     int type;
-
     char resesistance_group_type_str[20];
-    while (1) {
-        sleep(config.RESISTANCE_GROUP_CREATION_INTERVAL);
-        if (resistance_group_counter < config.RESISTANCE_GROUP_MAX) {
-            printf("Forking resistance group\n");
-            if ((resistance_group_pid[resistance_group_counter] = fork()) == 0) {
-                type = propability_choice(config.MILITARY_GROUP_PROBABILITY) ? MILITARY : SOCIALIST;
-                snprintf(resesistance_group_type_str, sizeof(resesistance_group_type_str), "%d", type);
-                snprintf(resistance_group_id_str, sizeof(resistance_group_id_str), "%d", resistance_group_counter + 1 );
-                execl("./bin/resistance_group", "resistance_group", argv, resistance_group_id_str, resesistance_group_type_str, NULL);
-                // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv, resistance_group_id_str, resesistance_group_type_str, NULL);
-                perror("Resistance group process failed");
-                exit(1);
-            }
-            resistance_group_counter++;
+
+    if (resistance_group_counter < config.RESISTANCE_GROUP_MAX) {
+        if ((resistance_group_pid[resistance_group_counter] = fork()) == 0) {
+            type = propability_choice(config.MILITARY_GROUP_PROBABILITY) ? MILITARY : SOCIALIST;
+            snprintf(resesistance_group_type_str, sizeof(resesistance_group_type_str), "%d", type);
+            snprintf(resistance_group_id_str, sizeof(resistance_group_id_str), "%d", resistance_group_counter + 1);
+            execl("./bin/resistance_group", "resistance_group", config_file , resistance_group_id_str, resesistance_group_type_str, NULL);
+            perror("Resistance group process failed");
+            exit(1);
         }
+        resistance_group_counter++;
     }
+
+    alarm(config.RESISTANCE_GROUP_CREATION_INTERVAL);
+
+
+
+    // printf("Fork resistance group thread created\n");    
+    // char resistance_group_id_str[20];
+
+    // int type;
+
+    // char resesistance_group_type_str[20];
+    // while (1) {
+    //     sleep(config.RESISTANCE_GROUP_CREATION_INTERVAL);
+    //     if (resistance_group_counter < config.RESISTANCE_GROUP_MAX) {
+    //         printf("Forking resistance group\n");
+    //         if ((resistance_group_pid[resistance_group_counter] = fork()) == 0) {
+    //             type = propability_choice(config.MILITARY_GROUP_PROBABILITY) ? MILITARY : SOCIALIST;
+    //             snprintf(resesistance_group_type_str, sizeof(resesistance_group_type_str), "%d", type);
+    //             snprintf(resistance_group_id_str, sizeof(resistance_group_id_str), "%d", resistance_group_counter + 1 );
+    //             execl("./bin/resistance_group", "resistance_group", argv, resistance_group_id_str, resesistance_group_type_str, NULL);
+    //             // execl("/home/adduser/ENCS4330/Projects/Project3/Counter-Espionage-Agency-Simulation/projectCode/bin/resistance_group", "resistance_group", argv, resistance_group_id_str, resesistance_group_type_str, NULL);
+    //             perror("Resistance group process failed");
+    //             exit(1);
+    //         }
+    //         resistance_group_counter++;
+    //     }
+    // }
 }
 
 

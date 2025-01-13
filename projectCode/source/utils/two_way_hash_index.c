@@ -135,8 +135,7 @@ void* get_or_create_node(HashTable* table, const void* member_id, const void* gr
     return member_node->data;
 }
 
-
-// function that will iterate over the gourp members and call the function on each member
+// function that will iterate over the group members and call the function on each member
 void iterate_group_members(HashTable* table, const void* group_id, void (*func)(void* data)) {
     size_t group_hash = hash_function(group_id, table->group_id_size, table->capacity);
 
@@ -153,10 +152,6 @@ void iterate_group_members(HashTable* table, const void* group_id, void (*func)(
         }
     }
 }
-
-
-// 
-
 
 //example on how to use the iterate_group_members function
 // void print_data(void* data) {

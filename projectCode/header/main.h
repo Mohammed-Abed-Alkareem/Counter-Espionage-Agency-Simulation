@@ -11,7 +11,7 @@ void cleanup();
 void handle_alarm(int signal);
 void exit_program();
 void alarm_handler(int signal);
-void *fork_resistance_group(void *arg);
+void fork_resistance_group(int signal);
 void handle_interrupt(int signal);
 
 

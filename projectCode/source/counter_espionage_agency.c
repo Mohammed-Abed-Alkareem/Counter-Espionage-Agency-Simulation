@@ -63,7 +63,11 @@ typedef PeopleInfoNode people_info_node;
 HashTable *people_info_hash;
 HashTable *resistance_member_info_hash;
 
-
+// Define the message queue IDs
+int msg_agency_to_people_id;
+int msg_agency_to_resistance_group_id;
+int enemy_to_agency_attack_id;
+int resistance_group_to_agency_id;
 
 
 
@@ -268,7 +272,7 @@ void read_message_from_resistance_group(AGENCY_MEMBER *member){
         switch (message.state)
         {
         case KILLED:
-            pthread_mutex_lcock(&member_info->lock);
+            pthread_mutex_lock(&member_info->lock);
             member_info->state = DEAD;
             pthread_mutex_unlock(&member_info->lock);
             analyze_contact_recored(member_info);
@@ -359,6 +363,8 @@ void read_message_from_resistance_group(AGENCY_MEMBER *member){
         default:
             break;
         }
+
+        print_color("message recived by agency from resistance !!!",RED);
         // char console_message[200];
         // sprintf(console_message, "Member %d has been updated to state %d\n", member->id, message.state);
         // print_color(console_message, YELLOW);
@@ -511,11 +517,7 @@ void examine_resistance_member_states_in_group(const void* group_id) {
 
 
 
-// Define the message queue IDs
-int msg_agency_to_people_id;
-int msg_agency_to_resistance_group_id;
-int enemy_to_agency_attack_id;
-int resistance_group_to_agency_id;
+
 
 // Clean-up function called at exit
 void cleanUp() {
@@ -560,7 +562,7 @@ void* member_function(void* arg) {
     int people_group_id = 1;
     while (1) {
         sleep(1); // Simulate member activity interval
-
+        print_color("agency mem started",RED);
         switch (member->status) {
             case ALIVE:
             case ACTIVE:
@@ -651,27 +653,24 @@ void recover_from_injury(AGENCY_MEMBER *member) {
 
 // Function to handle attacks
 void handle_attack(AGENCY_MEMBER *member) {
-
-    
-        // Check for attacks from the enemy
-        if (shared_mem_attack[member->id-1] == 1) {
-            if(random_float(0, 1) < config.ENEMY_ATTACK_PROBABILITY) {
-                member->health -= config.MAX_HEALTH;
+    // Check for attacks from the enemy
+    if (shared_mem_attack[member->id - 1] == 1) {
+        if (random_float(0, 1) < config.ENEMY_ATTACK_PROBABILITY) {
+            member->health -= config.MAX_HEALTH;
+            member->status = KILLED;
+        } else {
+            member->health -= random_integer(config.MIN_HEALTH, config.MAX_HEALTH);
+            shared_mem_attack[member->id - 1] = 0;
+            if (member->health <= 0) {
                 member->status = KILLED;
-                
-            }else{
-                member->health -= random_integer(config.MIN_HEALTH, config.MAX_HEALTH);
-                shared_mem_attack[member->id - 1]=0;
-                if (member->health <= 0) {
-                    member->status = KILLED;
-                } else if (member->health < config.MIN_HEALTH) {
-                    member->status = SERIOUSLYINJURED;
-                }else if (member->health < config.MIN_HEALTH) {
-                    member->status = LIGHTINJURED;
-                }
+            } else if (member->health < config.MIN_HEALTH) {
+                member->status = SERIOUSLYINJURED;
+            } else if (member->health < config.MIN_HEALTH) {
+                member->status = LIGHTINJURED;
             }
         }
-        shared_mem_attack[member->id-1] = 0 ;
+    }
+    shared_mem_attack[member->id - 1] = 0;
 }
 
 // Function to investigate and arrest suspicious members
@@ -698,15 +697,14 @@ void send_contact_message(AGENCY_MEMBER *member) {
     contact_message.enroll_date = member->time_with_agency;
 
     // Send the message to the people
-    if (msgsnd(msg_agency_to_people_id, &contact_message, sizeof(AgencyMemberToPeopleContactMessage), 0) == -1) {
+    if (msgsnd(msg_agency_to_people_id, &contact_message, sizeof(AgencyMemberToPeopleContactMessage), IPC_NOWAIT) == -1) {
         perror("Error sending message to people");
     }
 }
 
 // Main function
 int main(int argc, char *argv[]) {
-    // Register clean-up function
-    atexit(cleanUp);
+
 
     // Check for correct number of arguments
     if (argc != 2) {
@@ -714,20 +712,20 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    // Register clean-up function
+    atexit(cleanUp);
     // Load the configuration file
     if (load_config(argv[1], &config) == -1) {
         fprintf(stderr, "Error loading config file\n");
         exit(EXIT_FAILURE);
     }
-
     // Create a shared semaphore for shared data
         // Create a shared semaphore for shared data
     sem_ter_cond = sem_open("/termination_cond_sem", O_CREAT, 0644, 1);
     if (sem_ter_cond == SEM_FAILED) {
-    perror("sem_open failed");
-    exit(EXIT_FAILURE);
-}
-
+        perror("sem_open failed");
+        exit(EXIT_FAILURE);
+    }
     // Shared memory for data
     key_t shm_data_key = key_generator('A');
 
@@ -737,7 +735,6 @@ int main(int argc, char *argv[]) {
         cleanUp();
         exit(1);
     }
-
     // Attach shared memory to shared_data
     shared_data = (SharedData *)shmat(shm_data_id, NULL, 0);
     if (shared_data == (void *)-1) {
@@ -745,7 +742,6 @@ int main(int argc, char *argv[]) {
         cleanUp();
         exit(1);
     }
-
     // Initialize the shared data
     shared_data->number_killed_members = 0;
     shared_data->number_injured_members = 0;
@@ -768,21 +764,18 @@ int main(int argc, char *argv[]) {
         perror("Shared memory creation failed");
         exit(1);
     }
-    
     shared_mem_attack = (int *)shmat(shm_id, NULL, 0);
     if (shared_mem_attack == (void *)-1) {
         perror("Shared memory attachment failed");
         exit(1);
     }
     for (int i = 0; i < config.COUNTER_ESPIONAGE_AGENCY_MEMBER; i++) {
-        shared_mem_attack[i] = 1;
+        shared_mem_attack[i] = 0;
     }
-
 
     // create the hash table for the people info and resistance member info
     people_info_hash = create_hash_table(create_people_info_node, delete_people_info_node , config.CIVILIAN_NUMBER , 2);
     resistance_member_info_hash = create_hash_table(create_resistance_member_info_node, delete_resistance_member_info_node,config.RESISTANCE_MEMBER_MAX , config.RESISTANCE_GROUP_MAX);
-
 
 
 
@@ -817,14 +810,12 @@ int main(int argc, char *argv[]) {
 
 
 
-
     // get the message queue id 
     msg_agency_to_people_id = create_message_queue(msg_agency_to_people_id);
     msg_agency_to_resistance_group_id = create_message_queue(msg_agency_to_resistance_group_id);
     enemy_to_agency_attack_id = create_message_queue(enemy_to_agency_attack_id);
     resistance_group_to_agency_id = create_message_queue(resistance_group_to_agency_id);
     
-
 
     // Initialize agency members
     for (int i = 0; i < config.COUNTER_ESPIONAGE_AGENCY_MEMBER; i++) {
