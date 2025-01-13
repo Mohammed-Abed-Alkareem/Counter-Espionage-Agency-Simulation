@@ -349,6 +349,7 @@ void *member_function(void *arg) {
             sprintf(console_message, "Member %d is killed From group %d in attack\n", member->id, member->group_id);
             print_color(console_message, RED);
             // exit the thread
+            
             NUM_OF_EXISTING_MEMBERS--;
             if (member->is_spy) {
                 spy_exist--;

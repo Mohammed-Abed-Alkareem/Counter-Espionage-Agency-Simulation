@@ -7,7 +7,9 @@ Config config;
 // Shared memory for enemy attacks
 int *shared_mem_attack;
 int shm_id;
-
+sem_t *sem_ter_cond;
+int sem_data_id = -1;
+SharedData *shared_data;
 
 /*
     * define the hash table for the people info and resistance member info
@@ -269,6 +271,10 @@ void read_message_from_resistance_group(AGENCY_MEMBER *member){
             member_info->state = DEAD;
             pthread_mutex_unlock(&member_info->lock);
             analyze_contact_recored(member_info);
+            sem_wait(sem_ter_cond);
+            shared_data->number_killed_members++;
+            sem_post(sem_ter_cond);
+
             
             break;
         case ATTACKED:
@@ -278,6 +284,9 @@ void read_message_from_resistance_group(AGENCY_MEMBER *member){
                 member_info->attacked_count++;
                 pthread_mutex_unlock(&member_info->lock);
                 analyze_contact_recored(member_info);
+                sem_wait(sem_ter_cond);
+                shared_data->number_injured_members++;
+                sem_post(sem_ter_cond);
             }
             break;
         case CAPTURED:
@@ -287,6 +296,9 @@ void read_message_from_resistance_group(AGENCY_MEMBER *member){
                 member_info->captured_count++;
                 pthread_mutex_unlock(&member_info->lock);
                 analyze_contact_recored(member_info);
+                sem_wait(sem_ter_cond);
+                shared_data->number_captured_members++;
+                sem_post(sem_ter_cond);
             }
             break;
         case SERIOUSLYINJURED:
@@ -706,6 +718,38 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Error loading config file\n");
         exit(EXIT_FAILURE);
     }
+
+    // Create a shared semaphore for shared data
+        // Create a shared semaphore for shared data
+    sem_ter_cond = sem_open("/termination_cond_sem", O_CREAT, 0644, 1);
+    if (sem == SEM_FAILED) {
+    perror("sem_open failed");
+    exit(EXIT_FAILURE);
+}
+
+    // Shared memory for data
+    key_t shm_data_key = key_generator('A');
+
+    int shm_data_id = shmget(shm_data_key, sizeof(SharedData), IPC_CREAT | 0666); // create shared memory
+    if (shm_data_id == -1) {
+        perror("Shared memory creation failed");
+        cleanUp();
+        exit(1);
+    }
+
+    // Attach shared memory to shared_data
+    shared_data = (SharedData *)shmat(shm_data_id, NULL, 0);
+    if (shared_data == (void *)-1) {
+        perror("Shared memory attach failed");
+        cleanUp();
+        exit(1);
+    }
+
+    // Initialize the shared data
+    shared_data->number_killed_members = 0;
+    shared_data->number_injured_members = 0;
+    shared_data->number_captured_members = 0;
+
 
 
     // creating and initializing the shared memory in the main process
