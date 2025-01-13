@@ -94,8 +94,14 @@ typedef struct  {
     int group_id; // Specific attack on a member
     int group_type; // e.g., military, civilian
     int group_member; // Specific attack on a member
-    int enroll_date ; 
-    int isCounterAttack; // For counter attack
+//<<<<<<< adham_branch
+    int num_of_sec; // Number of seconds communicated
+    int enroll_data; // Enrolment data
+    int isCounterAttack; // to differentiate between the counter espionage and the resistance group attack
+//=======
+ //   int enroll_date ; 
+ ///   int isCounterAttack; // For counter attack
+//>>>>>>> MohammedQady11
 }SpyToEnemyReportMessage; // report message from spy to enemy
 
 
@@ -124,6 +130,7 @@ typedef struct {
     int member_id; // Member ID
     int num_of_sec; // Number of seconds communicated
     int enroll_date; // Enrolment date
+
 } AgencyMemberToPeopleContactMessage; // agency member to people contact message structure
 
 

@@ -87,6 +87,8 @@ int load_config(const char *filename, Config *config) {
                 else if (strcmp(key, "MAX_CONTACT_TIME") == 0) config->MAX_CONTACT_TIME = value;
                 else if (strcmp(key, "MAX_ATTACK_DAMAGE") == 0) config->MAX_ATTACK_DAMAGE = value;
                 else if (strcmp(key, "MIN_ATTACK_DAMAGE") == 0) config->MIN_ATTACK_DAMAGE = value;
+                else if (strcmp(key,"ENEMY_NUMBER") == 0) config->ENEMY_NUMBER = value;
+                
                 else {
                     fprintf(stderr, "Unexpected integer key: %s\n", key);
                 }

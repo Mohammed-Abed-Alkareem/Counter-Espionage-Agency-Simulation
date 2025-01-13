@@ -90,7 +90,12 @@ ENEMY_ATTACK_PROBABILITY=0.4
 AGENCY_MEMBER_TARGET_PROBABILITY=0.2  
 
 #number of civilians
-CIVILIAN_NUMBER=3   
+CIVILIAN_NUMBER=3
+
+#number of enemies
+ENEMY_NUMBER=3
+
+
 
 #________________________________
 #----Termination conditions-----
