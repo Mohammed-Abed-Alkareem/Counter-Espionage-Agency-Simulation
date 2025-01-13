@@ -52,6 +52,7 @@ int load_config(const char *filename, Config *config) {
     config->MAX_CONTACT_TIME = 20;
     config->MAX_ATTACK_DAMAGE = 20;
     config->MIN_ATTACK_DAMAGE = 5;
+    config->ENEMY_NUMBER = 5;
 
 
     char line[256];

@@ -27,7 +27,7 @@ int msg_queue_ids[10]; // Message queue ids
 // ------IPC ids------
 int shm_data_id = -1;
 int msg_resistance_agency_id = -1;
-
+sem_t *sem_ter_cond;
 
 
 // main function
@@ -73,6 +73,23 @@ int main(int argc, char *argv[]) {
     shared_data->number_injured_members = 0;    
     shared_data->number_captured_members = 0;
 
+    // Create a shared semaphore for shared data
+    sem_ter_cond = sem_open("/termination_cond_sem", O_CREAT, 0644, 1);
+    if (sem == SEM_FAILED) {
+    perror("sem_open failed");
+    exit(EXIT_FAILURE);
+}
+
+
+    // Initialize the semaphore to 1 (binary semaphore)
+    if (semctl(sem_data_id, 0, SETVAL, 1) == -1) {
+        perror("Semaphore initialization failed");
+        cleanup();
+        exit(1);
+    }
+
+    // Store semaphore id in shared data
+    shared_data->sem_data_id = sem_data_id;
 
     // --- Message queues ---
     
@@ -277,7 +294,10 @@ void cleanup() {
     if (msg_resistance_agency_id != -1) msgctl(msg_resistance_agency_id, IPC_RMID, NULL);
 
     free(resistance_group_pid);
-
+    sem_close(sem_ter_cond);
+    sem_unlink("/termination_cond_sem");
+    //remove the named semaphores
+    
 
     // terminate the thread thread_fork_resistance_group
     pthread_cancel(thread_fork_resistance_group);
