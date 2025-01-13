@@ -12,5 +12,8 @@ HashTable* create_hash_table(CreateNodeFunc create_node, DeleteNodeFunc delete_n
 void delete_hash_table(HashTable* table);
 
 void* get_or_create_node(HashTable* table, const void* member_id, const void* group_id);
+void iterate_group_members(HashTable* table, const void* group_id, void (*func)(void* data));
+
+
 
 #endif // TWO_WAY_HASH_INDEX_H
