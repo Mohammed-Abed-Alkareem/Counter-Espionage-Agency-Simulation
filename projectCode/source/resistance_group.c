@@ -251,7 +251,7 @@ void send_report_to_enemy(RESISTANCE_MEMBER *member){
     report_message.group_id = member->group_id;
     report_message.type = 0 ;
     report_message.group_type = member->type;
-    report_message.enroll_date = member->enroll_date;
+    report_message.enroll_data = member->enroll_date;
     report_message.process_id = getpid();
     report_message.isCounterAttack = 0;
 
