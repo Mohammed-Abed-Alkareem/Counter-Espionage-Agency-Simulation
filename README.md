@@ -49,3 +49,38 @@ This project simulates a counter-espionage agency tasked with identifying and ne
 - A threshold of injured resistance members is reached.
 - All counter-espionage agents are either killed or captured within a given time frame.
 
+### **Compilation**
+
+- To compile the project, use the `Makefile` provided. 
+
+```bash
+make
+```
+
+- To remove the compiled binary and perform a fresh build:
+```bash
+make clean
+```
+  - Ensures no residual artifacts from previous builds interfere with the current build.
+
+### **3. Execution**
+Run the main program with a configuration file:
+```bash
+./bin/main configuration.txt
+```
+
+## Issues
+
+- **Minor Code Errors**: Some errors exist in the code that may cause unexpected behavior.
+
+- **OpenGL Process Not Connected**: The OpenGL module is not properly connected to the main process and is not dynamically taking values from the simulation.
+
+- **Visualization Issue**: The expected OpenGL visualization should dynamically adjust based on simulation events, but rendering issues prevent real-time updates.
+
+  <div align="center">
+    <img src="assets/opengl.gif" alt="Desired Visualization" width="500" />
+</div>
+
+
+
+
